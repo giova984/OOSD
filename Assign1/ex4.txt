@@ -1,2 +1,0 @@
-Both versions are wrong, because in std::list specifications, the iterator passed as param is invalidated, so it can't be used (incremented) otherwise an undefined behaviour is expected.
-For lists a valid iterator is returned by erase calls (can be an end() iterator).
