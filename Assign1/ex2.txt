@@ -1,0 +1,3 @@
+The minimal set of operations (and operators) that class MyClass must provide depends by operations used in intersection and union functions.
+In this case these functions need only operator< to compare elements, so operator< is the only one that had to be defined for MyClass class.
+The choose to implement equivalence using operator< has been made in order to comply to stl functions set_union and set_intersection which use same method.
