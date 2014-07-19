@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 2.8.11)
+project(MetaSim)
+add_definitions(-std=c++11)
+add_subdirectory(src)
+add_subdirectory(examples)
