@@ -9,5 +9,12 @@ find_package(Qt5Widgets)
 
 include_directories(${METASIM_INCLUDE_DIR})
 
-add_executable(wifi wifi.cpp)
+add_executable(wifi 
+node.cpp
+message.cpp
+link.cpp
+netinterface.cpp
+wifi.cpp
+example.cpp
+)
 target_link_libraries(wifi ${METASIM_LIBRARY} Qt5::Widgets)
