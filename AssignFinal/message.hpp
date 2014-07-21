@@ -3,7 +3,7 @@
 
 #include <metasim.hpp>
 
-#define _MESSAGE_DBG "EthernetLink"
+#define _MESSAGE_DBG "WifiLink"
 
 class Node;
 class NetInterface;

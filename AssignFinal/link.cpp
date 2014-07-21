@@ -3,6 +3,7 @@
 #include "link.hpp"
 #include "message.hpp"
 
+#include <functional>
 using namespace std;
 using namespace MetaSim;
 
@@ -14,9 +15,8 @@ Link::~Link()
 {
 }
 
-EthernetLink::EthernetLink(const char *name) 
-        : Link(name), _interfaces(), _contending(), 
-          _isBusy(false),
+WifiLink::WifiLink(const char *name)
+        : Link(name), _interfaces(), _contending(), _transmitting(),
           _isContending(false),
           _isCollision(false),
           _contention_period(10),
@@ -25,40 +25,44 @@ EthernetLink::EthernetLink(const char *name)
           _collision_evt(),
           _end_transmission_evt()
 {
-        register_handler(_end_contention_evt, this, &EthernetLink::onEndContention);
-        register_handler(_collision_evt, this, &EthernetLink::onCollision);
-        register_handler(_end_transmission_evt, this, &EthernetLink::onEndTransmission);
+        register_handler(_end_contention_evt, this, &WifiLink::onEndContention);
+        register_handler(_collision_evt, this, &WifiLink::onCollision);
+        register_handler(_end_transmission_evt, this, &WifiLink::onEndTransmission);
 }
 
-EthernetLink::~EthernetLink()
+WifiLink::~WifiLink()
 {
 }
 
-void EthernetLink::newRun()
+void WifiLink::newRun()
 {
         _contending.clear();
-        _isBusy = false;
+        _transmitting.clear();
         _isContending = false;
         _isCollision = false;
         _message = 0;
 }
  
-void EthernetLink::endRun()
+void WifiLink::endRun()
 {
 }
 
-bool EthernetLink::isBusy()
+bool WifiLink::isBusy(WifiInterface *in)
 {
-        return _isBusy;
+    for (auto t : _transmitting){
+        if (t!= in && t->isTransmitting() && in->isNear(t))
+            return true;
+    }
+    return false;
 }
 
-void EthernetLink::send(Message *m)
+void WifiLink::send(Message *m)
 {
 }
 
-void EthernetLink::contend(EthernetInterface *eth, Message *m)
+void WifiLink::contend(WifiInterface *wifi, Message *m)
 {
-        DBGENTER(_ETHLINK_DBG);
+        DBGENTER(_WIFILINK_DBG);
  
         if (_isContending) {
                 _end_contention_evt.drop();
@@ -70,19 +74,21 @@ void EthernetLink::contend(EthernetInterface *eth, Message *m)
         else {
                 _isContending = true;
                 _message = m;
+
+                MetaSim::GEvent<WifiLink> actual_end_contention_evt();
+                register_handler(actual_end_contention_evt, this, std::bind1st<void(Event*)> (WifiLink::onEndContention));
                 _end_contention_evt.post(SIMUL.getTime() + _contention_period);
         }
-        _contending.push_back(eth);
+        _contending.push_back(wifi);
 
         
 }
 
-void EthernetLink::onEndContention(Event *e)
+void WifiLink::onEndContention(Event *e)
 {
-        DBGENTER(_ETHLINK_DBG);
+        DBGENTER(_WIFILINK_DBG);
 
         _isContending = false;
-        _isBusy = true;
         _end_transmission_evt.post(SIMUL.getTime() + _message->getLength());
 
         _contending.clear();
@@ -90,32 +96,30 @@ void EthernetLink::onEndContention(Event *e)
         
 }
 
-void EthernetLink::onCollision(Event *e)
+void WifiLink::onCollision(Event *e)
 {
-        DBGENTER(_ETHLINK_DBG);
+        DBGENTER(_WIFILINK_DBG);
 
         _isContending = false;
         _isCollision = false;
-        _isBusy = false;
+
         while (!_contending.empty()) {
                 _contending.back()->onCollision();
                 _contending.pop_back();
         }
         _message = 0;
 
-        
 }
 
-void EthernetLink::onEndTransmission(Event *e)
+void WifiLink::onEndTransmission(Event *e)
 {
         Message *m = _message;
 
-        DBGENTER(_ETHLINK_DBG);
+        DBGENTER(_WIFILINK_DBG);
 
         NetInterface *dst = _message->getDestInterface();
         NetInterface *src = _message->getSourceInterface();
 
-        _isBusy = false;
         _message = 0;
 
         dst->onMessageReceived(m);

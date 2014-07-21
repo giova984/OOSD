@@ -3,14 +3,15 @@
 
 #include <deque>
 #include <vector>
+#include <utility>
 
 #include <metasim.hpp>
 
-#define _ETHINTER_DBG "EthernetInterface"
+#define _WIFIINTER_DBG "WifiInterface"
 
 class Node;
 class Message;
-class EthernetLink;
+class WifiLink;
 
 class NetInterface : public MetaSim::Entity {
 protected:
@@ -26,23 +27,27 @@ public:
   virtual void onMessageReceived(Message *m) = 0;
 };
 
-class EthernetInterface : public NetInterface {
+class WifiInterface : public NetInterface {
 protected:
-  EthernetLink* _link;
+  WifiLink* _link;
   std::deque<Message*> _queue;
   std::vector<Message*> _received;
   std::vector<Node*> _blocked;
 
+  std::pair<double, double> position2D;
+  double radius;
+
   int _cont_per;
   int _backoff;
   int _coll;
+  bool _isTransmitting;
 
 public:
 
-  MetaSim::GEvent<EthernetInterface> _trans_evt;
+  MetaSim::GEvent<WifiInterface> _trans_evt;
 
-  EthernetInterface(const char* name, Node& n, EthernetLink& l);
-  virtual ~EthernetInterface();
+  WifiInterface(const char* name, Node& n, std::pair<double, double> pos2D, double radius, WifiLink& l);
+  virtual ~WifiInterface();
 
   MetaSim::Tick nextTransTime();
 
@@ -52,6 +57,14 @@ public:
   virtual Message* receive(Node* n);
   virtual void onMessageSent(Message* m); 
   virtual void onMessageReceived(Message* m);
+
+  std::pair<double, double> getPosition2D(){ return position2D; }
+  void setPosition2D(std::pair<double, double> pos ){ position2D = pos; }
+  double getRadius(){ return radius; }
+  void setRadius(double r){ radius = r; }
+  bool isNear(WifiInterface *i);
+
+  bool isTransmitting(){ return _isTransmitting; }
 
   void newRun();
   void endRun();

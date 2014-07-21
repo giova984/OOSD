@@ -20,21 +20,21 @@ NetInterface::~NetInterface()
 {
 }
 
-EthernetInterface::EthernetInterface(const char *name, Node &n, EthernetLink &l) :
-        NetInterface(name,n), _link(&l), _queue(), _received(), _blocked(),
+WifiInterface::WifiInterface(const char *name, Node &n, std::pair<double, double> pos2D, double radius, WifiLink &l) :
+        NetInterface(name,n), position2D(pos2D), radius(radius),_link(&l), _queue(), _received(), _blocked(),
         _trans_evt()
 {
-        register_handler(_trans_evt, this, &EthernetInterface::onTransmit);
+        register_handler(_trans_evt, this, &WifiInterface::onTransmit);
 
         _cont_per = _link->getContentionPeriod();
         _backoff = _cont_per;
         _coll = 0;
 }
 
-EthernetInterface::~EthernetInterface()
+WifiInterface::~WifiInterface()
 {}
 
-void EthernetInterface::newRun()
+void WifiInterface::newRun()
 {
         vector<Message *>::iterator i;
 
@@ -46,14 +46,19 @@ void EthernetInterface::newRun()
 
 }
  
-void EthernetInterface::endRun()
+void WifiInterface::endRun()
 {
 }
 
+bool WifiInterface::isNear(WifiInterface *i){
+    if (sqrt(position2D.first*position2D.first + i->getPosition2D().second*i->getPosition2D().second) < (radius + i->getRadius()))
+            return true;
+    return false;
+}
 
-void EthernetInterface::send(Message *m)
+void WifiInterface::send(Message *m)
 {
-        DBGENTER(_ETHINTER_DBG);
+        DBGENTER(_WIFIINTER_DBG);
 
         _queue.push_back(m);
   
@@ -64,28 +69,28 @@ void EthernetInterface::send(Message *m)
         
 }
 
-void EthernetInterface::onTransmit(Event *e)
+void WifiInterface::onTransmit(Event *e)
 {
-        DBGENTER(_ETHINTER_DBG);
+        DBGENTER(_WIFIINTER_DBG);
 
-        if (_link->isBusy()) onCollision();
+        if (_link->isBusy(this)) onCollision();
         else _link->contend(this, _queue.front());
 
         
 }
 
-void EthernetInterface::onCollision()
+void WifiInterface::onCollision()
 {
-        DBGENTER(_ETHINTER_DBG);
+        DBGENTER(_WIFIINTER_DBG);
 
         _trans_evt.post(SIMUL.getTime() + nextTransTime());
 
         
 }
 
-void EthernetInterface::onMessageSent(Message *m)
+void WifiInterface::onMessageSent(Message *m)
 {
-        DBGENTER(_ETHINTER_DBG);
+        DBGENTER(_WIFIINTER_DBG);
 
         _queue.pop_front();
 
@@ -97,9 +102,9 @@ void EthernetInterface::onMessageSent(Message *m)
         
 }
 
-Tick EthernetInterface::nextTransTime()
+Tick WifiInterface::nextTransTime()
 {
-        DBGTAG(_ETHINTER_DBG, getName() + "::nextTransTime()");
+        DBGTAG(_WIFIINTER_DBG, getName() + "::nextTransTime()");
 
         _coll++;
 
@@ -110,9 +115,9 @@ Tick EthernetInterface::nextTransTime()
         return (Tick) a.get();
 }
 
-void EthernetInterface::onMessageReceived(Message *m)
+void WifiInterface::onMessageReceived(Message *m)
 {
-        DBGENTER(_ETHINTER_DBG);
+        DBGENTER(_WIFIINTER_DBG);
 
         vector<Node *>::iterator i = find(_blocked.begin(), _blocked.end(), m->getDestNode());
 
@@ -126,9 +131,9 @@ void EthernetInterface::onMessageReceived(Message *m)
         
 }
 
-Message * EthernetInterface::receive(Node *n)
+Message * WifiInterface::receive(Node *n)
 {
-        DBGTAG(_ETHINTER_DBG, getName() + "::receive()");
+        DBGTAG(_WIFIINTER_DBG, getName() + "::receive()");
 
         vector<Message *>::iterator i = _received.begin();
         Message *m = NULL;

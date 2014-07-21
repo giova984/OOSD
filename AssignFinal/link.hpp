@@ -8,7 +8,7 @@
 
 #include "netinterface.hpp"
 
-const char* const _ETHLINK_DBG = "EthernetLink";
+const char* const _WIFILINK_DBG = "WifiLink";
 
 class Message;
 
@@ -20,11 +20,11 @@ public:
         virtual void send(Message *m) = 0;
 };
 
-class EthernetLink : public Link {
-        std::vector<EthernetInterface *> _interfaces;
-        std::vector<EthernetInterface *> _contending;
+class WifiLink : public Link {
+        std::vector<WifiInterface *> _interfaces;
+        std::vector<WifiInterface *> _contending;
+        std::vector<WifiInterface *> _transmitting;
 
-        bool _isBusy;
         bool _isContending;
         bool _isCollision;
         int _contention_period;
@@ -33,18 +33,22 @@ class EthernetLink : public Link {
 
 public:
 
-        MetaSim::GEvent<EthernetLink> _end_contention_evt;
-        MetaSim::GEvent<EthernetLink> _collision_evt;
-        MetaSim::GEvent<EthernetLink> _end_transmission_evt;
+        MetaSim::GEvent<WifiLink> _end_contention_evt;
+        MetaSim::GEvent<WifiLink> _collision_evt;
+        MetaSim::GEvent<WifiLink> _end_transmission_evt;
 
-        EthernetLink(const char *name);
-        virtual ~EthernetLink();
+        std::vector<MetaSim::GEvent<WifiLink>> _end_contention_evts;
+        std::vector<MetaSim::GEvent<WifiLink>> _collision_evts;
+        std::vector<MetaSim::GEvent<WifiLink>> _end_transmission_evts;
 
-        bool isBusy();
+        WifiLink(const char *name);
+        virtual ~WifiLink();
+
+        bool isBusy(WifiInterface *in);
 
         virtual void send(Message *m);
 
-        void contend(EthernetInterface *eth, Message *m);
+        void contend(WifiInterface *wifi, Message *m);
         void onEndContention(MetaSim::Event *e);
         void onCollision(MetaSim::Event *e);
         void onEndTransmission(MetaSim::Event *e);

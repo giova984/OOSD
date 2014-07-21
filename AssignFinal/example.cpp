@@ -26,9 +26,9 @@ public:
   
         void attach(Entity *e) 
         {
-                EthernetLink *l = dynamic_cast<EthernetLink *>(e);
+                WifiLink *l = dynamic_cast<WifiLink *>(e);
                 if (l == NULL) 
-                        throw BaseExc("Please, specify a Ethernet Link!");
+                        throw BaseExc("Please, specify a Wifi Link!");
     
                 l->_collision_evt.addStat(this);
         }
@@ -47,11 +47,11 @@ int main()
         n2.addDestNode(n1);
         n3.addDestNode(n1);
 
-        EthernetLink link("Eth_Link");
+        WifiLink link("Channel_1");
 
-        EthernetInterface int1("Interface_1", n1, link);
-        EthernetInterface int2("Interface_2", n2, link);
-        EthernetInterface int3("Interface_3", n3, link);
+        WifiInterface int1("Interface_1", n1, {0, 0}, 1, link);
+        WifiInterface int2("Interface_2", n2, {1, 0}, 1, link);
+        WifiInterface int3("Interface_3", n3, {1, 1}, 1, link);
 
         CollisionStat stat("coll.txt");
         stat.attach(&link);
@@ -70,8 +70,8 @@ int main()
                 n3.setInterval(auto_ptr<RandomVar>(new UniformVar(1,l3)));
     
                 SIMUL.dbg.setStream("log.txt");
-                SIMUL.dbg.enable(_ETHLINK_DBG);
-                SIMUL.dbg.enable(_ETHINTER_DBG);
+                SIMUL.dbg.enable(_WIFILINK_DBG);
+                SIMUL.dbg.enable(_WIFIINTER_DBG);
                 SIMUL.dbg.enable(_NODE_DBG);
  
                 try {
