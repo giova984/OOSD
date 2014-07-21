@@ -34,7 +34,7 @@ public:
         }
 };
 
-int main()
+int main2()
 {
         double u = 0.0;
 

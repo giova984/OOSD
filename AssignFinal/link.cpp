@@ -75,8 +75,8 @@ void WifiLink::contend(WifiInterface *wifi, Message *m)
                 _isContending = true;
                 _message = m;
 
-                MetaSim::GEvent<WifiLink> actual_end_contention_evt();
-                register_handler(actual_end_contention_evt, this, std::bind1st<void(Event*)> (WifiLink::onEndContention));
+            //    MetaSim::GEvent<WifiLink> actual_end_contention_evt();
+             //   register_handler(actual_end_contention_evt, this, std::bind1st<void(Event*)> (WifiLink::onEndContention));
                 _end_contention_evt.post(SIMUL.getTime() + _contention_period);
         }
         _contending.push_back(wifi);
