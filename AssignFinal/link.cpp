@@ -161,6 +161,8 @@ void WifiLink::onCollision(Event *e)
 {
     DBGENTER(_WIFILINK_DBG);
 
+    _link_collision_evt.process(); //used to update statistics
+
     auto wifi = getEventInterface(e);
     for (auto& i : _isContending)
         if (i.second && wifi->interfereWith(i.first)){
@@ -174,6 +176,8 @@ void WifiLink::onCollision(Event *e)
 
 void WifiLink::onEndTransmission(Event *e)
 {
+    _link_end_transmission_evt.process(); //used to update statistics
+
     auto wifi = getEventInterface(e);
     Message *m = _message[wifi];
 

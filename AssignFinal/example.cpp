@@ -40,18 +40,18 @@ int main()
 
         Node n1("Node_1");
         Node n2("Node_2");
-  //      Node n3("Node_3");
+        Node n3("Node_3");
 
         n1.addDestNode(n2);
-  //      n1.addDestNode(n3);
+        n1.addDestNode(n3);
         n2.addDestNode(n1);
-  //      n3.addDestNode(n1);
+        n3.addDestNode(n1);
 
         WifiLink link("Channel_1");
 
-        WifiInterface int1("Interface_1", n1, {0, 0}, 10, link);
-        WifiInterface int2("Interface_2", n2, {1, 0}, 10, link);
-        //WifiInterface int3("Interface_3", n3, {1, 1}, 1, link);
+        WifiInterface int1("Interface_1", n1, {0, 0}, 1, link);
+        WifiInterface int2("Interface_2", n2, {1, 0}, 1, link);
+        WifiInterface int3("Interface_3", n3, {1, 1}, 1, link);
 
         CollisionStat stat("coll.txt");
         stat.attach(&link);
@@ -67,7 +67,7 @@ int main()
 
                 n1.setInterval(auto_ptr<RandomVar>(new UniformVar(1,l1)));
                 n2.setInterval(auto_ptr<RandomVar>(new UniformVar(1,l2)));
-        //        n3.setInterval(auto_ptr<RandomVar>(new UniformVar(1,l3)));
+                n3.setInterval(auto_ptr<RandomVar>(new UniformVar(1,l3)));
     
                 SIMUL.dbg.setStream("log.txt");
                 SIMUL.dbg.enable(_WIFILINK_DBG);

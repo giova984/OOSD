@@ -56,7 +56,9 @@ void WifiInterface::endRun()
  * True if "this" can interfere with "i" (not viceversa if i has a lower transmission radius)
  */
 bool WifiInterface::interfereWith(WifiInterface *i){
-    if (sqrt(position2D.first*position2D.first + i->getPosition2D().second*i->getPosition2D().second) < max(radius, i->getRadius()))
+    double x = position2D.first - i->getPosition2D().first;
+    double y = position2D.second - i->getPosition2D().second;
+    if (sqrt( x*x + y*y ) <= max(radius, i->getRadius()))
             return true;
     return false;
 }
