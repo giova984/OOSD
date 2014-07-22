@@ -26,6 +26,8 @@ WifiInterface::WifiInterface(const char *name, Node &n, std::pair<double, double
 {
         register_handler(_trans_evt, this, &WifiInterface::onTransmit);
 
+        _link->registerInterface(this);
+
         _cont_per = _link->getContentionPeriod();
         _backoff = _cont_per;
         _coll = 0;
@@ -50,8 +52,11 @@ void WifiInterface::endRun()
 {
 }
 
-bool WifiInterface::isNear(WifiInterface *i){
-    if (sqrt(position2D.first*position2D.first + i->getPosition2D().second*i->getPosition2D().second) < (radius + i->getRadius()))
+/*
+ * True if "this" can interfere with "i" (not viceversa if i has a lower transmission radius)
+ */
+bool WifiInterface::interfereWith(WifiInterface *i){
+    if (sqrt(position2D.first*position2D.first + i->getPosition2D().second*i->getPosition2D().second) < max(radius, i->getRadius()))
             return true;
     return false;
 }

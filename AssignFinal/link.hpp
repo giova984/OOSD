@@ -5,6 +5,7 @@
 
 #include <entity.hpp>
 #include <event.hpp>
+#include <map>
 
 #include "netinterface.hpp"
 
@@ -22,24 +23,25 @@ public:
 
 class WifiLink : public Link {
         std::vector<WifiInterface *> _interfaces;
-        std::vector<WifiInterface *> _contending;
-        std::vector<WifiInterface *> _transmitting;
+ //       std::vector<WifiInterface *> _contending;
 
-        bool _isContending;
-        bool _isCollision;
+        std::map<WifiInterface *, bool> _isBusy;
+        std::map<WifiInterface *, bool> _isContending;
+        std::map<WifiInterface *, bool> _isCollision;
         int _contention_period;
 
-        Message *_message;
+        std::map<WifiInterface *, Message *> _message;
 
+        std::map<WifiInterface *, std::unique_ptr<MetaSim::Event>> _end_contention_evts;
+        std::map<WifiInterface *, std::unique_ptr<MetaSim::Event>> _collision_evts;
+        std::map<WifiInterface *, std::unique_ptr<MetaSim::Event>> _end_transmission_evts;
 public:
 
-        MetaSim::GEvent<WifiLink> _end_contention_evt;
-        MetaSim::GEvent<WifiLink> _collision_evt;
-        MetaSim::GEvent<WifiLink> _end_transmission_evt;
+        MetaSim::GEvent<WifiLink> _link_end_contention_evt;
+        MetaSim::GEvent<WifiLink> _link_collision_evt;
+        MetaSim::GEvent<WifiLink> _link_end_transmission_evt;
+        MetaSim::GEvent<WifiLink> _link_hidden_terminal_evt;
 
-        std::vector<MetaSim::GEvent<WifiLink>> _end_contention_evts;
-        std::vector<MetaSim::GEvent<WifiLink>> _collision_evts;
-        std::vector<MetaSim::GEvent<WifiLink>> _end_transmission_evts;
 
         WifiLink(const char *name);
         virtual ~WifiLink();
@@ -52,9 +54,13 @@ public:
         void onEndContention(MetaSim::Event *e);
         void onCollision(MetaSim::Event *e);
         void onEndTransmission(MetaSim::Event *e);
+        void onHiddenTerminal(MetaSim::Event *e);
 
         void setContentionPeriod(int p) { _contention_period = p; }
         int getContentionPeriod() { return _contention_period; }
+
+        void registerInterface(WifiInterface * interf);
+        WifiInterface * getEventInterface(MetaSim::Event * e);
 
         void newRun(); 
         void endRun(); 

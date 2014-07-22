@@ -16,18 +16,22 @@ Link::~Link()
 }
 
 WifiLink::WifiLink(const char *name)
-        : Link(name), _interfaces(), _contending(), _transmitting(),
-          _isContending(false),
-          _isCollision(false),
+        : Link(name), _interfaces(),
+          //_contending(),
+          //_isBusy(false),
+          //_isContending(false),
+          //_isCollision(false),
           _contention_period(10),
-          _message(0),
-          _end_contention_evt(),
-          _collision_evt(),
-          _end_transmission_evt()
+  //        _message(0),
+          _link_end_contention_evt(),
+          _link_collision_evt(),
+          _link_end_transmission_evt(),
+          _link_hidden_terminal_evt()
 {
-        register_handler(_end_contention_evt, this, &WifiLink::onEndContention);
-        register_handler(_collision_evt, this, &WifiLink::onCollision);
-        register_handler(_end_transmission_evt, this, &WifiLink::onEndTransmission);
+        register_handler(_link_end_contention_evt, this, nullptr);
+        register_handler(_link_collision_evt, this, nullptr);
+        register_handler(_link_end_transmission_evt, this, nullptr);
+        register_handler(_link_hidden_terminal_evt, this, &WifiLink::onHiddenTerminal);
 }
 
 WifiLink::~WifiLink()
@@ -36,21 +40,46 @@ WifiLink::~WifiLink()
 
 void WifiLink::newRun()
 {
-        _contending.clear();
-        _transmitting.clear();
-        _isContending = false;
-        _isCollision = false;
-        _message = 0;
+        //_contending.clear();
+        //_isBusy = false;
+        //_isContending = false;
+        //_isCollision = false;
+        //_message = 0;
+    for (auto& i : _isBusy)
+        _isBusy[i.first] = false;
+    for (auto& i : _isContending)
+        _isContending[i.first] = false;
+    for (auto& i : _isCollision)
+        _isCollision[i.first] = false;
+    for (auto& i : _message)
+        _message[i.first] = 0;
 }
  
 void WifiLink::endRun()
 {
 }
 
+void WifiLink::registerInterface(WifiInterface * interf){
+    auto e = new MetaSim::GEvent<WifiLink>();
+    register_handler(*e, this, &WifiLink::onEndContention);
+    _end_contention_evts[interf] = unique_ptr<MetaSim::Event>(e);
+    e = new MetaSim::GEvent<WifiLink>();
+    register_handler(*e, this, &WifiLink::onCollision);
+    _collision_evts[interf] = unique_ptr<MetaSim::Event>(e);
+    e = new MetaSim::GEvent<WifiLink>();
+    register_handler(*e, this, &WifiLink::onEndTransmission);
+    _end_transmission_evts[interf] = unique_ptr<MetaSim::Event>(e);
+    _isBusy[interf] = false;
+    _isContending[interf] = false;
+    _isCollision[interf] = false;
+    _message[interf] = 0;
+}
+
 bool WifiLink::isBusy(WifiInterface *in)
 {
-    for (auto t : _transmitting){
-        if (t!= in && t->isTransmitting() && in->isNear(t))
+    //return _isBusy;
+    for (auto& t : _isBusy){
+        if (t.second && in->interfereWith(t.first))
             return true;
     }
     return false;
@@ -63,67 +92,100 @@ void WifiLink::send(Message *m)
 void WifiLink::contend(WifiInterface *wifi, Message *m)
 {
         DBGENTER(_WIFILINK_DBG);
- 
-        if (_isContending) {
-                _end_contention_evt.drop();
-                if (!_isCollision) {
-                        _isCollision = true;
-                        _collision_evt.post(SIMUL.getTime() + 3);
+
+        bool _isContendingNear = false;
+        for (auto& i : _isContending){
+            if (i.second && wifi->interfereWith(i.first))
+                _isContendingNear = true;
+        }
+
+        if (_isContendingNear) {
+                //dropping near events
+                for (auto& i : _isContending)
+                    if(i.second && wifi->interfereWith(i.first))
+                        _end_contention_evts[i.first]->drop();
+                //_end_contention_evt.drop();
+
+                bool _isCollisionNear = false;
+                for (auto& i : _isCollision)
+                    if(i.second && wifi->interfereWith(i.first))
+                        _isCollisionNear = true;
+                if (!_isCollisionNear) {
+                        _isCollision[wifi] = true;
+                        _collision_evts[wifi]->post(SIMUL.getTime() + 3);
                 }
         }
         else {
-                _isContending = true;
-                _message = m;
-
-            //    MetaSim::GEvent<WifiLink> actual_end_contention_evt();
-             //   register_handler(actual_end_contention_evt, this, std::bind1st<void(Event*)> (WifiLink::onEndContention));
-                _end_contention_evt.post(SIMUL.getTime() + _contention_period);
+                //_isContending[wifi] = true;
+                _message[wifi] = m;
+                _end_contention_evts[wifi]->post(SIMUL.getTime() + _contention_period);
         }
-        _contending.push_back(wifi);
+        _isContending[wifi] = true;
+//        _contending.push_back(wifi);
 
-        
+
+}
+
+WifiInterface * WifiLink::getEventInterface(MetaSim::Event * e){
+    for (auto& i : _end_contention_evts)
+        if (e == i.second.get())
+            return i.first;
+    for (auto& i : _collision_evts)
+        if (e == i.second.get())
+            return i.first;
+    for (auto& i : _end_transmission_evts)
+        if (e == i.second.get())
+            return i.first;
+    return nullptr;
 }
 
 void WifiLink::onEndContention(Event *e)
 {
         DBGENTER(_WIFILINK_DBG);
 
-        _isContending = false;
-        _end_transmission_evt.post(SIMUL.getTime() + _message->getLength());
+        _link_end_contention_evt.process(); //used to update statistics
 
-        _contending.clear();
+        auto wifi = getEventInterface(e);
+        _isContending[wifi] = false;
+        _isBusy[wifi] = true;
+        _end_transmission_evts[wifi]->post(SIMUL.getTime() + _message[wifi]->getLength());
 
-        
+        //_contending.clear();
+}
+
+void WifiLink::onHiddenTerminal(Event *e){
+    //TODO
 }
 
 void WifiLink::onCollision(Event *e)
 {
-        DBGENTER(_WIFILINK_DBG);
+    DBGENTER(_WIFILINK_DBG);
 
-        _isContending = false;
-        _isCollision = false;
-
-        while (!_contending.empty()) {
-                _contending.back()->onCollision();
-                _contending.pop_back();
+    auto wifi = getEventInterface(e);
+    for (auto& i : _isContending)
+        if (i.second && wifi->interfereWith(i.first)){
+            _isContending[i.first] = false;
+            _isCollision[i.first] = false;
+            _isBusy[i.first] = false;
+            _message[i.first] = 0;
+            i.first->onCollision();
         }
-        _message = 0;
-
 }
 
 void WifiLink::onEndTransmission(Event *e)
 {
-        Message *m = _message;
+    auto wifi = getEventInterface(e);
+    Message *m = _message[wifi];
 
-        DBGENTER(_WIFILINK_DBG);
+    DBGENTER(_WIFILINK_DBG);
 
-        NetInterface *dst = _message->getDestInterface();
-        NetInterface *src = _message->getSourceInterface();
+    NetInterface *dst = m->getDestInterface();
+    NetInterface *src = m->getSourceInterface();
 
-        _message = 0;
+    _isBusy[wifi] = false;
+    _message[wifi] = 0;
 
-        dst->onMessageReceived(m);
-        src->onMessageSent(m);
+    dst->onMessageReceived(m);
+    src->onMessageSent(m);
 
-        
 }

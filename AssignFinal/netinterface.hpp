@@ -62,7 +62,7 @@ public:
   void setPosition2D(std::pair<double, double> pos ){ position2D = pos; }
   double getRadius(){ return radius; }
   void setRadius(double r){ radius = r; }
-  bool isNear(WifiInterface *i);
+  bool interfereWith(WifiInterface *i);
 
   bool isTransmitting(){ return _isTransmitting; }
 
