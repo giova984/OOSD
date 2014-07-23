@@ -40,6 +40,7 @@ public:
         MetaSim::GEvent<WifiLink> _link_end_contention_evt;
         MetaSim::GEvent<WifiLink> _link_collision_evt;
         MetaSim::GEvent<WifiLink> _link_end_transmission_evt;
+        MetaSim::GEvent<WifiLink> _link_dst_not_reachable_evt;
         MetaSim::GEvent<WifiLink> _link_hidden_terminal_evt;
 
 
@@ -54,6 +55,7 @@ public:
         void onEndContention(MetaSim::Event *e);
         void onCollision(MetaSim::Event *e);
         void onEndTransmission(MetaSim::Event *e);
+        void onDstNotReachable(MetaSim::Event *e);
         void onHiddenTerminal(MetaSim::Event *e);
 
         void setContentionPeriod(int p) { _contention_period = p; }

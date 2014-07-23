@@ -31,6 +31,7 @@ WifiLink::WifiLink(const char *name)
         register_handler(_link_end_contention_evt, this, nullptr);
         register_handler(_link_collision_evt, this, nullptr);
         register_handler(_link_end_transmission_evt, this, nullptr);
+        register_handler(_link_dst_not_reachable_evt, this, &WifiLink::onDstNotReachable);
         register_handler(_link_hidden_terminal_evt, this, &WifiLink::onHiddenTerminal);
 }
 
@@ -155,6 +156,7 @@ void WifiLink::onEndContention(Event *e)
 
 void WifiLink::onHiddenTerminal(Event *e){
     //TODO
+    //std::cout << "HT detected" << std::endl;
 }
 
 void WifiLink::onCollision(Event *e)
@@ -189,7 +191,37 @@ void WifiLink::onEndTransmission(Event *e)
     _isBusy[wifi] = false;
     _message[wifi] = 0;
 
-    dst->onMessageReceived(m);
+    WifiInterface *d = dynamic_cast<WifiInterface *>(dst);
+    //WifiInterface *s = dynamic_cast<WifiInterface *>(src);
+
+    if( d != NULL && wifi->interfereWith(d) ){
+        // detecting if hidden terminal event occurred
+        bool ht_detected = false;
+        for (auto& i : _isContending){
+            //TODO decidere se anche la contesa interferisce con la trasmissione nel rilevamento dell'ht problem
+            if (i.second && i.first->interfereWith(d))
+                ht_detected = true;
+        }
+        for (auto& i : _isBusy){
+            if (i.second && i.first->interfereWith(d))
+                ht_detected = true;
+        }
+        if (!ht_detected){
+            dst->onMessageReceived(m);
+            //src->onMessageSent(m);
+            //std::cout << "HT NOT detected" << std::endl;
+        }else{
+            _link_hidden_terminal_evt.process();
+            //src->onMessageLost(m);
+        }
+    }else{
+        _link_dst_not_reachable_evt.process();
+        //src->onMessageSent(m);
+    }
     src->onMessageSent(m);
+
+}
+
+void WifiLink::onDstNotReachable(Event *e){
 
 }

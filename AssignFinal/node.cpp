@@ -19,7 +19,9 @@ Node::Node(string const & name)
 
 void Node::newRun()
 {
+    if (_interval != nullptr)
         _send_evt.post((int)_interval->get());
+    //else node doesn't send messages
 }
 
 void Node::endRun()
@@ -65,17 +67,19 @@ void Node::addDestNode(Node &n)
 
 void Node::onSend(Event *e)
 {
-        UniformVar len(100,1500);
-        UniformVar n(0, _nodes.size());
-        int i = (int)n.get();
+    if (_nodes.size() <= 0)
+        return;
 
-        DBGENTER(_NODE_DBG);
+    UniformVar len(100,1500);
+    UniformVar n(0, _nodes.size());
+    int i = (int)n.get();
 
-        DBGPRINT("dest node = " << _nodes[i]->getName());
-        // creates a new message and send it!! 
-        Message *m = new Message((int)len.get(), this, _nodes[i]);
-        _net_interf->send(m);
-        _send_evt.post(SIMUL.getTime() + (Tick)_interval->get());
+    DBGENTER(_NODE_DBG);
 
-        
+    DBGPRINT("dest node = " << _nodes[i]->getName());
+    // creates a new message and send it!!
+    Message *m = new Message((int)len.get(), this, _nodes[i]);
+    _net_interf->send(m);
+    _send_evt.post(SIMUL.getTime() + (Tick)_interval->get());
+
 }

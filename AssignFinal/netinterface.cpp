@@ -105,9 +105,17 @@ void WifiInterface::onMessageSent(Message *m)
         _backoff = _cont_per;
 
         if (!_queue.empty()) _trans_evt.process();
-
         
 }
+
+//void WifiInterface::onMessageLost(Message *m)
+//{
+//        DBGENTER(_WIFIINTER_DBG);
+
+//        //destination is not reachable, the message is discarded (as if it was sent
+//        onMessageSent(m);
+
+//}
 
 Tick WifiInterface::nextTransTime()
 {

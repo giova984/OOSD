@@ -24,6 +24,7 @@ public:
   virtual Message * receive(Node *n) = 0;
   
   virtual void onMessageSent(Message *m) = 0;
+//  virtual void onMessageLost();
   virtual void onMessageReceived(Message *m) = 0;
 };
 
@@ -56,6 +57,7 @@ public:
   virtual void onTransmit(MetaSim::Event* e);
   virtual Message* receive(Node* n);
   virtual void onMessageSent(Message* m); 
+//  virtual void onMessageLost(Message* m);
   virtual void onMessageReceived(Message* m);
 
   std::pair<double, double> getPosition2D(){ return position2D; }

@@ -43,15 +43,16 @@ int main()
         Node n3("Node_3");
 
         n1.addDestNode(n2);
-        n1.addDestNode(n3);
-        n2.addDestNode(n1);
-        n3.addDestNode(n1);
+    //    n1.addDestNode(n3);
+    //    n2.addDestNode(n1);
+    //    n3.addDestNode(n1);
+            n3.addDestNode(n2);
 
         WifiLink link("Channel_1");
 
         WifiInterface int1("Interface_1", n1, {0, 0}, 1, link);
         WifiInterface int2("Interface_2", n2, {1, 0}, 1, link);
-        WifiInterface int3("Interface_3", n3, {1, 1}, 1, link);
+        WifiInterface int3("Interface_3", n3, {2, 0}, 1, link);
 
         CollisionStat stat("coll.txt");
         stat.attach(&link);
