@@ -1,9 +1,13 @@
+#include <algorithm>
 #include <simul.hpp>
+#include <memory>
 
 #include "link.hpp"
 #include "message.hpp"
 #include "netinterface.hpp"
 #include "node.hpp"
+
+#define __DEBUG__
 
 using namespace std;
 using namespace MetaSim;
@@ -34,7 +38,145 @@ public:
         }
 };
 
-int main()
+class HiddenTerminalStat : public StatCount {
+public:
+        HiddenTerminalStat(const char *name) : StatCount(name) {}
+
+        void probe(Event *e)
+        {
+                record(1);
+        }
+
+        void attach(Entity *e)
+        {
+                WifiLink *l = dynamic_cast<WifiLink *>(e);
+                if (l == NULL)
+                        throw BaseExc("Please, specify a Wifi Link!");
+
+                l->_link_hidden_terminal_evt.addStat(this);
+        }
+};
+
+class MessageLostStat : public StatCount {
+public:
+        MessageLostStat(const char *name) : StatCount(name) {}
+
+        void probe(Event *e)
+        {
+                record(1);
+        }
+
+        void attach(Entity *e)
+        {
+                WifiLink *l = dynamic_cast<WifiLink *>(e);
+                if (l == NULL)
+                        throw BaseExc("Please, specify a Wifi Link!");
+
+                l->_link_dst_not_reachable_evt.addStat(this);
+                l->_link_hidden_terminal_evt.addStat(this);
+        }
+};
+
+class MessageReceivedStat : public StatCount {
+public:
+        MessageReceivedStat(const char *name) : StatCount(name) {}
+
+        void probe(Event *e)
+        {
+                record(1);
+        }
+
+        void attach(Entity *e)
+        {
+                WifiLink *l = dynamic_cast<WifiLink *>(e);
+                if (l == NULL)
+                        throw BaseExc("Please, specify a Wifi Link!");
+
+                l->_link_msg_received_evt.addStat(this);
+        }
+};
+
+int main_ex2(){
+    std::vector<int> _m_sizes = {3, 4, 5};
+    const int MAX_RAND = 100;
+
+
+
+    CollisionStat c_stat("coll.txt");
+    HiddenTerminalStat ht_stat("hidden.txt");
+    MessageLostStat ml_stat("lost.txt");
+    MessageReceivedStat mr_stat("received.txt");
+
+
+    for (auto _m : _m_sizes){ //running simulation on a different number of nodes
+
+        WifiLink link("Channel_1");
+
+        c_stat.attach(&link);
+        ht_stat.attach(&link);
+        ml_stat.attach(&link);
+        mr_stat.attach(&link);
+
+        std::vector<std::vector<std::unique_ptr<Node>>> _nodes;
+        _nodes.reserve(_m);
+
+        std::vector<std::unique_ptr<WifiInterface>> _interfaces;
+        _interfaces.reserve(_m*_m);
+
+        std::vector<std::unique_ptr<MetaSim::RandomGen>> _gens;
+        _gens.reserve(_m*_m);
+
+        for (int i=0; i<_m; ++i){ //creating nodes and WifiInterfaces
+            _nodes.emplace_back(std::vector<std::unique_ptr<Node>> ());
+            _nodes[i].reserve(_m);
+            for (int j=0; j<_m; ++j){
+                _nodes[i].emplace_back( new Node("Node_" + std::to_string(i) + "_" + std::to_string(j)) );
+                _interfaces.emplace_back( new WifiInterface( "interface_" + std::to_string(i) + "_" + std::to_string(j), *(_nodes[i].back()), std::make_pair(i, j), 1, link ) );
+            }
+        }
+
+        for (int i=0; i<_m; ++i){ //adding destinations
+            _nodes[i][0]->addDestNode(*_nodes[i][_m-1]);
+            //_nodes[i][0]->addDestNode(*_nodes[i][1]);
+            //_nodes[i][_m-1]->addDestNode(*_nodes[i][0]);
+            _nodes[0][i]->addDestNode(*_nodes[_m-1][i]);
+        }
+
+        double u = 0.0;
+
+        GnuPlotOutput output;
+        output.init();
+
+        for (u=UMIN; u<= UMAX; u+=USTEP) {
+            double l1 = MAX_RAND / u;
+            double l2 = l1;
+            double l3 = l1;
+
+            for (int i=0; i<_m; ++i){
+                for (int j=0; j<_m; ++j){
+                    int seed = j + 100*i + 10000*_m;
+                    _gens.emplace_back( std::unique_ptr<MetaSim::RandomGen>(new RandomGen(seed)) );
+                    _nodes[i][j]->setInterval(std::unique_ptr<RandomVar>( new UniformVar(1, l1, _gens.back().get()) ));
+                }
+            }
+
+            SIMUL.dbg.setStream("log.txt");
+            SIMUL.dbg.enable(_WIFILINK_DBG);
+            SIMUL.dbg.enable(_WIFIINTER_DBG);
+            SIMUL.dbg.enable(_NODE_DBG);
+
+            try {
+                cout << "U = " << u << endl;
+                SIMUL.run(SIM_LEN, 5);
+                output.write(u);
+            } catch (BaseExc &e) {
+                cout << e.what() << endl;
+            }
+        }
+    }
+}
+
+int main_simple()
 {
         double u = 0.0;
 
@@ -66,9 +208,9 @@ int main()
                 double l2 = l1;
                 double l3 = l1;
 
-                n1.setInterval(auto_ptr<RandomVar>(new UniformVar(1,l1)));
-                n2.setInterval(auto_ptr<RandomVar>(new UniformVar(1,l2)));
-                n3.setInterval(auto_ptr<RandomVar>(new UniformVar(1,l3)));
+                n1.setInterval(std::unique_ptr<RandomVar>(new UniformVar(1,l1)));
+                n2.setInterval(std::unique_ptr<RandomVar>(new UniformVar(1,l2)));
+                n3.setInterval(std::unique_ptr<RandomVar>(new UniformVar(1,l3)));
     
                 SIMUL.dbg.setStream("log.txt");
                 SIMUL.dbg.enable(_WIFILINK_DBG);
@@ -83,4 +225,9 @@ int main()
                         cout << e.what() << endl;
                 }
         }
+}
+
+int main(){
+    //return main_simple();
+    return main_ex2();
 }

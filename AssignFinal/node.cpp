@@ -10,7 +10,7 @@ using namespace MetaSim;
 /*-----------------------------------------------------*/
 
 Node::Node(string const & name) 
-        : Entity(name), _net_interf(0), _interval(nullptr),
+        : Entity(name), _net_interf(0), _interval(nullptr), message_to_send(100), sent_messages(0),
           _nodes(), _recv_evt(), _send_evt()
 {
         register_handler(_recv_evt, this, &Node::onReceive);
@@ -19,6 +19,7 @@ Node::Node(string const & name)
 
 void Node::newRun()
 {
+    sent_messages = 0;
     if (_interval != nullptr)
         _send_evt.post((int)_interval->get());
     //else node doesn't send messages
@@ -67,6 +68,11 @@ void Node::addDestNode(Node &n)
 
 void Node::onSend(Event *e)
 {
+    ++sent_messages;
+
+    if (sent_messages > message_to_send)
+        return;
+
     if (_nodes.size() <= 0)
         return;
 

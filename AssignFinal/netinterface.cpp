@@ -10,7 +10,7 @@
 using namespace std;
 using namespace MetaSim;
 
-NetInterface::NetInterface(const char *name, Node &n) :
+NetInterface::NetInterface(string const &name, Node &n) :
         Entity(name), _node(&n)
 {
         _node->setNetInterface(*this);
@@ -20,7 +20,7 @@ NetInterface::~NetInterface()
 {
 }
 
-WifiInterface::WifiInterface(const char *name, Node &n, std::pair<double, double> pos2D, double radius, WifiLink &l) :
+WifiInterface::WifiInterface(string const &name, Node &n, std::pair<double, double> pos2D, double radius, WifiLink &l) :
         NetInterface(name,n), position2D(pos2D), radius(radius),_link(&l), _queue(), _received(), _blocked(),
         _trans_evt()
 {
@@ -133,6 +133,8 @@ Tick WifiInterface::nextTransTime()
 void WifiInterface::onMessageReceived(Message *m)
 {
         DBGENTER(_WIFIINTER_DBG);
+
+        _link->_link_msg_received_evt.process();
 
         vector<Node *>::iterator i = find(_blocked.begin(), _blocked.end(), m->getDestNode());
 

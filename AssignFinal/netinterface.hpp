@@ -17,7 +17,7 @@ class NetInterface : public MetaSim::Entity {
 protected:
   Node *_node;
 public:
-  NetInterface(const char *name, Node &n);
+  NetInterface(std::string const &name, Node &n);
   virtual ~NetInterface();
   
   virtual void send(Message *m) = 0;
@@ -47,7 +47,7 @@ public:
 
   MetaSim::GEvent<WifiInterface> _trans_evt;
 
-  WifiInterface(const char* name, Node& n, std::pair<double, double> pos2D, double radius, WifiLink& l);
+  WifiInterface(std::string const &name, Node& n, std::pair<double, double> pos2D, double radius, WifiLink& l);
   virtual ~WifiInterface();
 
   MetaSim::Tick nextTransTime();

@@ -26,13 +26,15 @@ WifiLink::WifiLink(const char *name)
           _link_end_contention_evt(),
           _link_collision_evt(),
           _link_end_transmission_evt(),
-          _link_hidden_terminal_evt()
+          _link_hidden_terminal_evt(),
+          _link_msg_received_evt()
 {
         register_handler(_link_end_contention_evt, this, nullptr);
         register_handler(_link_collision_evt, this, nullptr);
         register_handler(_link_end_transmission_evt, this, nullptr);
         register_handler(_link_dst_not_reachable_evt, this, &WifiLink::onDstNotReachable);
         register_handler(_link_hidden_terminal_evt, this, &WifiLink::onHiddenTerminal);
+        register_handler(_link_msg_received_evt, this, nullptr);
 }
 
 WifiLink::~WifiLink()
@@ -216,12 +218,12 @@ void WifiLink::onEndTransmission(Event *e)
         }
     }else{
         _link_dst_not_reachable_evt.process();
-        //src->onMessageSent(m);
+        //src->onMessageLost(m);
     }
     src->onMessageSent(m);
 
 }
 
 void WifiLink::onDstNotReachable(Event *e){
-
+    //std::cout << "dst not reachable" << std::endl;
 }

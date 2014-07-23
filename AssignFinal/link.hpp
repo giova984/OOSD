@@ -42,6 +42,7 @@ public:
         MetaSim::GEvent<WifiLink> _link_end_transmission_evt;
         MetaSim::GEvent<WifiLink> _link_dst_not_reachable_evt;
         MetaSim::GEvent<WifiLink> _link_hidden_terminal_evt;
+        MetaSim::GEvent<WifiLink> _link_msg_received_evt;
 
 
         WifiLink(const char *name);
