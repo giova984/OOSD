@@ -22,7 +22,7 @@ class Node : public MetaSim::Entity {
 
   std::vector<Node*> _nodes;
 
-  int message_to_send;
+  int messages_to_send;
   int sent_messages;
 
 
@@ -42,7 +42,7 @@ public:
   void onReceive(MetaSim::Event *e);
   void onSend(MetaSim::Event *e);
 
-  void setMessageToSend(unsigned int m){ message_to_send = m; }
+  void setMessageToSend(unsigned int m){ messages_to_send = m; }
 
   void newRun();
   void endRun();

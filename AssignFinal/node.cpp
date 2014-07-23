@@ -10,7 +10,7 @@ using namespace MetaSim;
 /*-----------------------------------------------------*/
 
 Node::Node(string const & name) 
-        : Entity(name), _net_interf(0), _interval(nullptr), message_to_send(100), sent_messages(0),
+        : Entity(name), _net_interf(0), _interval(nullptr), messages_to_send(100), sent_messages(0),
           _nodes(), _recv_evt(), _send_evt()
 {
         register_handler(_recv_evt, this, &Node::onReceive);
@@ -70,7 +70,7 @@ void Node::onSend(Event *e)
 {
     ++sent_messages;
 
-    if (sent_messages > message_to_send)
+    if (sent_messages > messages_to_send)
         return;
 
     if (_nodes.size() <= 0)

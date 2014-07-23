@@ -1,6 +1,8 @@
 #ifndef __MESSAGE_HPP__
 #define __MESSAGE_HPP__
 
+#include <vector>
+
 #include <metasim.hpp>
 
 #define _MESSAGE_DBG "WifiLink"
@@ -21,6 +23,8 @@ class Message {
 
   Node *_dst;
   Node *_src;
+
+  std::vector<Node*> hops;
 
   NetInterface *_dst_net_interf;
   NetInterface *_src_net_interf;

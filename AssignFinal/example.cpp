@@ -19,6 +19,15 @@ const double USTEP = 0.1;
 const unsigned AVG_LEN = 800;
 const Tick SIM_LEN = (int) (AVG_LEN * 1000);
 
+#include<sstream>
+ template <typename T>
+ std::string to_string(T value)
+ {
+   std::ostringstream os ;
+   os << value ;
+   return os.str() ;
+ }
+
 class CollisionStat : public StatCount {
 public:
         CollisionStat(const char *name) : StatCount(name) {}
@@ -100,17 +109,14 @@ int main_ex2(){
     std::vector<int> _m_sizes = {3, 4, 5};
     const int MAX_RAND = 100;
 
-
-
-    CollisionStat c_stat("coll.txt");
-    HiddenTerminalStat ht_stat("hidden.txt");
-    MessageLostStat ml_stat("lost.txt");
-    MessageReceivedStat mr_stat("received.txt");
-
-
     for (auto _m : _m_sizes){ //running simulation on a different number of nodes
 
         WifiLink link("Channel_1");
+
+        CollisionStat c_stat("coll.txt");
+        HiddenTerminalStat ht_stat("hidden.txt");
+        MessageLostStat ml_stat("lost.txt");
+        MessageReceivedStat mr_stat("received.txt");
 
         c_stat.attach(&link);
         ht_stat.attach(&link);
@@ -130,8 +136,8 @@ int main_ex2(){
             _nodes.emplace_back(std::vector<std::unique_ptr<Node>> ());
             _nodes[i].reserve(_m);
             for (int j=0; j<_m; ++j){
-                _nodes[i].emplace_back( new Node("Node_" + std::to_string(i) + "_" + std::to_string(j)) );
-                _interfaces.emplace_back( new WifiInterface( "interface_" + std::to_string(i) + "_" + std::to_string(j), *(_nodes[i].back()), std::make_pair(i, j), 1, link ) );
+                _nodes[i].emplace_back( new Node("Node_" + to_string(i) + "_" + to_string(j)) );
+                _interfaces.emplace_back( new WifiInterface( "interface_" + to_string(i) + "_" + to_string(j), *(_nodes[i].back()), std::make_pair(i, j), 1, link ) );
             }
         }
 
@@ -166,7 +172,7 @@ int main_ex2(){
             SIMUL.dbg.enable(_NODE_DBG);
 
             try {
-                cout << "U = " << u << endl;
+                cout << "U = " << u << " M = " << _m << endl;
                 SIMUL.run(SIM_LEN, 5);
                 output.write(u);
             } catch (BaseExc &e) {

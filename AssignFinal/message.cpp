@@ -6,7 +6,8 @@ using namespace std;
 using namespace MetaSim;
 
 Message::Message(int l, Node *s, Node *d) :
-  _len(l), _dst(d), _src(s), _dst_net_interf(NULL),
+  _len(l), _dst(d), _src(s), hops(),
+  _dst_net_interf(NULL),
   _src_net_interf(NULL)
 {
   _dst_net_interf = _dst->getNetInterface();
