@@ -1,12 +1,15 @@
 #include <algorithm>
 #include <simul.hpp>
 #include <memory>
+#include <QApplication>
 
 #include "link.hpp"
 #include "message.hpp"
 #include "netinterface.hpp"
 #include "node.hpp"
 #include "routing.hpp"
+
+#include "wifi.hpp"
 
 #define __DEBUG__
 
@@ -286,7 +289,25 @@ int main_simple()
         }
 }
 
-int main(){
+int main_ui(int argc, char** argv){
+    QApplication app(argc, argv);
+     app.setApplicationName("Arthworks - QT version");
+
+     wifi mainWin;
+     mainWin.show();/*
+    QLabel label("Hello Qt!");
+    label.show();*/
+    return app.exec();
+    //ui->setupUi(this);
+}
+
+
+int main(int argc, char** argv)
+{
+    QApplication app(argc, argv);
+    wifi w;
+    w.show();
+    return app.exec();
     //return main_simple();
-    return main_ex2();
+    //return main_ex2();
 }

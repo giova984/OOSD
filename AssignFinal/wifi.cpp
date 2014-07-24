@@ -1,10 +1,14 @@
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QLabel>
+#include "wifi.hpp"
+#include "ui_wifi.h"
 
-int main2(int argc, char *argv[])
+wifi::wifi(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::wifi)
 {
-    QApplication app(argc, argv);
-    QLabel label("Hello Qt!");
-    label.show();
-    return app.exec();
+    ui->setupUi(this);
+}
+
+wifi::~wifi()
+{
+    delete ui;
 }

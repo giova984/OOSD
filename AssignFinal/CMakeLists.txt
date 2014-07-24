@@ -11,12 +11,15 @@ find_package(Qt5Widgets)
 
 include_directories(${METASIM_INCLUDE_DIR})
 
-add_executable(wifi 
+qt5_wrap_ui(SRC_UI wifi.ui)
+
+add_executable(wifi
+${SRC_UI}
 node.cpp
 message.cpp
 link.cpp
 netinterface.cpp
-wifi.cpp
+wifi.hpp wifi.cpp
 routing.cpp
 example.cpp
 )
