@@ -291,9 +291,10 @@ int main_simple()
 
 int main_ui(int argc, char** argv){
     QApplication app(argc, argv);
-     app.setApplicationName("Arthworks - QT version");
+     app.setApplicationName("Wifi Simulator");
 
      wifi mainWin;
+     mainWin.setWindowTitle("Simple Wifi Simulator");
      mainWin.show();/*
     QLabel label("Hello Qt!");
     label.show();*/
@@ -304,10 +305,7 @@ int main_ui(int argc, char** argv){
 
 int main(int argc, char** argv)
 {
-    QApplication app(argc, argv);
-    wifi w;
-    w.show();
-    return app.exec();
+    return main_ui(argc, argv);
     //return main_simple();
     //return main_ex2();
 }
