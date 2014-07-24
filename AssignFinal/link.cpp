@@ -1,7 +1,7 @@
-#include <metasim.hpp>
-
+//#include "metasim.hpp"
 #include "link.hpp"
 #include "message.hpp"
+#include "netinterface.hpp"
 
 #include <functional>
 using namespace std;
@@ -196,7 +196,7 @@ void WifiLink::onEndTransmission(Event *e)
     WifiInterface *d = dynamic_cast<WifiInterface *>(dst);
     //WifiInterface *s = dynamic_cast<WifiInterface *>(src);
 
-    if( d != NULL && wifi->interfereWith(d) ){
+    if( d != nullptr && wifi->interfereWith(d) ){
         // detecting if hidden terminal event occurred
         bool ht_detected = false;
         for (auto& i : _isContending){

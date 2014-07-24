@@ -6,12 +6,16 @@
 #include <utility>
 
 #include <metasim.hpp>
+//#include <entity.hpp>
+//#include <event.hpp>
 
 #define _WIFIINTER_DBG "WifiInterface"
 
+//class MetaSim;
 class Node;
 class Message;
 class WifiLink;
+class WifiRoutingTable;
 
 class NetInterface : public MetaSim::Entity {
 protected:
@@ -31,6 +35,8 @@ public:
 class WifiInterface : public NetInterface {
 protected:
   WifiLink* _link;
+  WifiRoutingTable *_routing;
+
   std::deque<Message*> _queue;
   std::vector<Message*> _received;
   std::vector<Node*> _blocked;
@@ -47,7 +53,7 @@ public:
 
   MetaSim::GEvent<WifiInterface> _trans_evt;
 
-  WifiInterface(std::string const &name, Node& n, std::pair<double, double> pos2D, double radius, WifiLink& l);
+  WifiInterface(std::string const &name, Node& n, std::pair<double, double> pos2D, double radius, WifiLink& l, WifiRoutingTable* rt = nullptr);
   virtual ~WifiInterface();
 
   MetaSim::Tick nextTransTime();

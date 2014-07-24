@@ -1,11 +1,12 @@
 #include <algorithm>
 
-#include <metasim.hpp>
+//#include <metasim.hpp>
 
 #include "link.hpp"
 #include "message.hpp"
 #include "netinterface.hpp"
 #include "node.hpp"
+#include "routing.hpp"
 
 using namespace std;
 using namespace MetaSim;
@@ -20,13 +21,17 @@ NetInterface::~NetInterface()
 {
 }
 
-WifiInterface::WifiInterface(string const &name, Node &n, std::pair<double, double> pos2D, double radius, WifiLink &l) :
-        NetInterface(name,n), position2D(pos2D), radius(radius),_link(&l), _queue(), _received(), _blocked(),
+WifiInterface::WifiInterface(string const &name, Node &n, std::pair<double, double> pos2D, double radius, WifiLink &l, WifiRoutingTable *rt) :
+        NetInterface(name,n), position2D(pos2D), radius(radius),_link(&l), _routing(rt),
+        _queue(), _received(), _blocked(),
         _trans_evt()
 {
         register_handler(_trans_evt, this, &WifiInterface::onTransmit);
 
         _link->registerInterface(this);
+
+        if(_routing)
+            _routing->registerInterface(this);
 
         _cont_per = _link->getContentionPeriod();
         _backoff = _cont_per;
@@ -55,10 +60,14 @@ void WifiInterface::endRun()
 /*
  * True if "this" can interfere with "i" (not viceversa if i has a lower transmission radius)
  */
+double distance(const std::pair<double, double> &a, const std::pair<double, double> &b){
+    double x = a.first - b.first;
+    double y = a.second - b.second;
+    return sqrt( x*x + y*y );
+}
+
 bool WifiInterface::interfereWith(WifiInterface *i){
-    double x = position2D.first - i->getPosition2D().first;
-    double y = position2D.second - i->getPosition2D().second;
-    if (sqrt( x*x + y*y ) <= max(radius, i->getRadius()))
+    if (distance(position2D, i->getPosition2D()) <= max(radius, i->getRadius()))
             return true;
     return false;
 }
@@ -66,6 +75,13 @@ bool WifiInterface::interfereWith(WifiInterface *i){
 void WifiInterface::send(Message *m)
 {
         DBGENTER(_WIFIINTER_DBG);
+
+        //Inserting Level 2 Routing
+        m->setSourceInterface(this);
+        if (_routing == nullptr)
+            m->setDestInterface(m->getDestNode()->getNetInterface());
+        else
+            m->setDestInterface(_routing->getNextHop(this, m->getDestNode()->getNetInterface()));
 
         _queue.push_back(m);
   
@@ -136,14 +152,26 @@ void WifiInterface::onMessageReceived(Message *m)
 
         _link->_link_msg_received_evt.process();
 
-        vector<Node *>::iterator i = find(_blocked.begin(), _blocked.end(), m->getDestNode());
+        // handling Routing Level 2
+        if (m->getDestNode()->getNetInterface() == this){ //if interface is on the final destination node
+            vector<Node *>::iterator i = find(_blocked.begin(), _blocked.end(), m->getDestNode());
 
-        if (i != _blocked.end()) {
-                (*i)->onMessageReceived(m);
-                _blocked.erase(i);
+            if (i != _blocked.end()) {
+                    (*i)->onMessageReceived(m);
+                    _blocked.erase(i);
+            }
+            else
+                    _received.push_back(m);
+
+            _node->_recv_evt.process();
         }
-        else 
-                _received.push_back(m);
+        else // else forward packet to next hop
+        {
+            send(m);
+        }
+
+
+
 
         
 }

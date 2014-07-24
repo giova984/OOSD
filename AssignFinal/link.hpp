@@ -2,16 +2,19 @@
 #define __LINK_HPP__
 
 #include <vector>
+#include <memory>
 
+#include <metasim.hpp>
 #include <entity.hpp>
 #include <event.hpp>
 #include <map>
 
-#include "netinterface.hpp"
-
 const char* const _WIFILINK_DBG = "WifiLink";
 
+//class MetaSim;
 class Message;
+class NetInterface;
+class WifiInterface;
 
 class Link : public MetaSim::Entity {
 public:

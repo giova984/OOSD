@@ -7,11 +7,11 @@ using namespace MetaSim;
 
 Message::Message(int l, Node *s, Node *d) :
   _len(l), _dst(d), _src(s), hops(),
-  _dst_net_interf(NULL),
-  _src_net_interf(NULL)
+  _dst_net_interf(nullptr),
+  _src_net_interf(nullptr)
 {
-  _dst_net_interf = _dst->getNetInterface();
-  _src_net_interf = _src->getNetInterface();
+  //_dst_net_interf = _dst->getNetInterface();
+  //_src_net_interf = _src->getNetInterface();
   _start_time = 0;
   _trans_time = 0;
   _arr_time = 0;

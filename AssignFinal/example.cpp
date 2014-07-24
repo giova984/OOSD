@@ -6,6 +6,7 @@
 #include "message.hpp"
 #include "netinterface.hpp"
 #include "node.hpp"
+#include "routing.hpp"
 
 #define __DEBUG__
 
@@ -28,9 +29,9 @@ const Tick SIM_LEN = (int) (AVG_LEN * 1000);
    return os.str() ;
  }
 
-class CollisionStat : public StatCount {
+class LinkCollisionStat : public StatCount {
 public:
-        CollisionStat(const char *name) : StatCount(name) {}
+        LinkCollisionStat(const char *name) : StatCount(name) {}
 
         void probe(Event *e) 
         {
@@ -40,16 +41,16 @@ public:
         void attach(Entity *e) 
         {
                 WifiLink *l = dynamic_cast<WifiLink *>(e);
-                if (l == NULL) 
+                if (l == nullptr)
                         throw BaseExc("Please, specify a Wifi Link!");
     
                 l->_link_collision_evt.addStat(this);
         }
 };
 
-class HiddenTerminalStat : public StatCount {
+class LinkHiddenTerminalStat : public StatCount {
 public:
-        HiddenTerminalStat(const char *name) : StatCount(name) {}
+        LinkHiddenTerminalStat(const char *name) : StatCount(name) {}
 
         void probe(Event *e)
         {
@@ -59,16 +60,16 @@ public:
         void attach(Entity *e)
         {
                 WifiLink *l = dynamic_cast<WifiLink *>(e);
-                if (l == NULL)
+                if (l == nullptr)
                         throw BaseExc("Please, specify a Wifi Link!");
 
                 l->_link_hidden_terminal_evt.addStat(this);
         }
 };
 
-class MessageLostStat : public StatCount {
+class LinkMessageLostStat : public StatCount {
 public:
-        MessageLostStat(const char *name) : StatCount(name) {}
+        LinkMessageLostStat(const char *name) : StatCount(name) {}
 
         void probe(Event *e)
         {
@@ -78,7 +79,7 @@ public:
         void attach(Entity *e)
         {
                 WifiLink *l = dynamic_cast<WifiLink *>(e);
-                if (l == NULL)
+                if (l == nullptr)
                         throw BaseExc("Please, specify a Wifi Link!");
 
                 l->_link_dst_not_reachable_evt.addStat(this);
@@ -86,9 +87,9 @@ public:
         }
 };
 
-class MessageReceivedStat : public StatCount {
+class LinkMessageReceivedStat : public StatCount {
 public:
-        MessageReceivedStat(const char *name) : StatCount(name) {}
+        LinkMessageReceivedStat(const char *name) : StatCount(name) {}
 
         void probe(Event *e)
         {
@@ -98,12 +99,32 @@ public:
         void attach(Entity *e)
         {
                 WifiLink *l = dynamic_cast<WifiLink *>(e);
-                if (l == NULL)
+                if (l == nullptr)
                         throw BaseExc("Please, specify a Wifi Link!");
 
                 l->_link_msg_received_evt.addStat(this);
         }
 };
+
+class NodeMessageReceivedStat : public StatCount {
+public:
+        NodeMessageReceivedStat(const char *name) : StatCount(name) {}
+
+        void probe(Event *e)
+        {
+                record(1);
+        }
+
+        void attach(Entity *e)
+        {
+                Node *n = dynamic_cast<Node *>(e);
+                if (n == nullptr)
+                        throw BaseExc("Please, specify a Node!");
+
+                n->_recv_evt.addStat(this);
+        }
+};
+
 
 int main_ex2(){
     std::vector<int> _m_sizes = {3, 4, 5};
@@ -111,12 +132,15 @@ int main_ex2(){
 
     for (auto _m : _m_sizes){ //running simulation on a different number of nodes
 
-        WifiLink link("Channel_1");
+        WifiLink link{"Channel_1"};
+        WifiRoutingTable routing_table;
+        //std::unique_ptr<WifiRoutingTable> routing_table(new WifiRoutingTable());
 
-        CollisionStat c_stat("coll.txt");
-        HiddenTerminalStat ht_stat("hidden.txt");
-        MessageLostStat ml_stat("lost.txt");
-        MessageReceivedStat mr_stat("received.txt");
+        LinkCollisionStat c_stat("coll.txt");
+        LinkHiddenTerminalStat ht_stat("hidden.txt");
+        LinkMessageLostStat ml_stat("lost.txt");
+        LinkMessageReceivedStat mr_stat("received.txt");
+        NodeMessageReceivedStat nmr_stat("node_received.txt");
 
         c_stat.attach(&link);
         ht_stat.attach(&link);
@@ -129,15 +153,21 @@ int main_ex2(){
         std::vector<std::unique_ptr<WifiInterface>> _interfaces;
         _interfaces.reserve(_m*_m);
 
-        std::vector<std::unique_ptr<MetaSim::RandomGen>> _gens;
-        _gens.reserve(_m*_m);
-
         for (int i=0; i<_m; ++i){ //creating nodes and WifiInterfaces
             _nodes.emplace_back(std::vector<std::unique_ptr<Node>> ());
             _nodes[i].reserve(_m);
             for (int j=0; j<_m; ++j){
                 _nodes[i].emplace_back( new Node("Node_" + to_string(i) + "_" + to_string(j)) );
-                _interfaces.emplace_back( new WifiInterface( "interface_" + to_string(i) + "_" + to_string(j), *(_nodes[i].back()), std::make_pair(i, j), 1, link ) );
+                _interfaces.emplace_back( new WifiInterface( "interface_" + to_string(i) + "_" + to_string(j),
+                                                             *(_nodes[i].back()),
+                                                             std::make_pair(i, j),
+                                                             1,
+                                                             link,
+                                                             &routing_table
+                                                             )
+                                          );
+
+                nmr_stat.attach(_nodes[i].back().get());
             }
         }
 
@@ -153,16 +183,39 @@ int main_ex2(){
         GnuPlotOutput output;
         output.init();
 
+//        std::vector<std::unique_ptr<MetaSim::RandomGen>> _gens;
+//        std::vector<std::unique_ptr<MetaSim::RandomVar>> _vars;
+//        _gens.reserve(_m*_m);
+//        _vars.reserve(_m*_m);
+//        for (int i=0; i<_m; ++i){
+//            for (int j=0; j<_m; ++j){
+//                int seed = j + 100*i + 10000*_m;
+//                _gens.emplace_back( std::unique_ptr<MetaSim::RandomGen>(new RandomGen(seed)) );
+//                _vars.emplace_back( std::unique_ptr<RandomVar>( new UniformVar(1, l1, _gens.back().get()) );
+//            }
+//        }
+
         for (u=UMIN; u<= UMAX; u+=USTEP) {
             double l1 = MAX_RAND / u;
             double l2 = l1;
             double l3 = l1;
 
+            std::vector<std::unique_ptr<MetaSim::RandomGen>> _gens;
+            std::vector<std::unique_ptr<MetaSim::RandomVar>> _vars;
+            _gens.reserve(_m*_m);
+            _vars.reserve(_m*_m);
             for (int i=0; i<_m; ++i){
                 for (int j=0; j<_m; ++j){
                     int seed = j + 100*i + 10000*_m;
                     _gens.emplace_back( std::unique_ptr<MetaSim::RandomGen>(new RandomGen(seed)) );
-                    _nodes[i][j]->setInterval(std::unique_ptr<RandomVar>( new UniformVar(1, l1, _gens.back().get()) ));
+                    _vars.emplace_back( std::unique_ptr<RandomVar>( new UniformVar(1, l1, _gens.back().get()) ) );
+                }
+            }
+
+            for (int i=0; i<_m; ++i){
+                for (int j=0; j<_m; ++j){
+                    int seed = j + 100*i + 10000*_m;
+                    _nodes[i][j]->setInterval(std::move(_vars[i*_m + j]));
                 }
             }
 
@@ -202,7 +255,7 @@ int main_simple()
         WifiInterface int2("Interface_2", n2, {1, 0}, 1, link);
         WifiInterface int3("Interface_3", n3, {2, 0}, 1, link);
 
-        CollisionStat stat("coll.txt");
+        LinkCollisionStat stat("coll.txt");
         stat.attach(&link);
   
         GnuPlotOutput output;
