@@ -6,25 +6,24 @@ NodeViewer::NodeViewer(QWidget *parent) : QWidget(parent),
     _actual_scale(DEFAULT_SCALE),
 
     _screen_region(0,0,0,0),
-    _screen_region_color(25, 150, 25, 100),
+    _screen_region_color(25, 180, 25, 100),
     _grid_color(0,0,0,0),
-
-    _color_point(50,50,255,100),
-    _color_radius(50,50,255,50),
-
+    _color_point(70,70,70,100),
+    _color_radius(70,70,70,50),
     _color_point_selected(255,50,50,255),
-    _color_radius_selected(255,50,50,200),
+    _color_radius_selected(255,50,50,150),
+    _color_destination_point(50,50,255,255),
+    _color_destination_radius(50,50,255,150),
     _color_connection(200,0,0,150),
     _pen(),
-    _brush(),
     _point_selected(),
+    _destination_selected{},
     _points{},
     _connections{},
     _font()
 {
     setBackgroundRole(QPalette::Base);
     setAutoFillBackground(true);
-    _brush.setStyle(Qt::SolidPattern);
 }
 
 NodeViewer::~NodeViewer()
@@ -66,10 +65,14 @@ void NodeViewer::drawPoints(){
         auto ry =  p.second.second * PIXEL_TO_HEIGHT;
 
         if(p.first == _point_selected){
-            this->_brush.setColor(_color_point_selected);
             painter.setBrush(QBrush(_color_point_selected));
             painter.drawEllipse(QPointF(x,y), DEFAULT_POINT_SIZE/ _actual_scale, DEFAULT_POINT_SIZE/ _actual_scale);
             painter.setBrush(QBrush(_color_radius_selected));
+            painter.drawEllipse(QPointF(x,y), rx, ry);
+        }else if (p.first == _destination_selected){
+            painter.setBrush(QBrush(_color_destination_point));
+            painter.drawEllipse(QPointF(x,y), DEFAULT_POINT_SIZE/ _actual_scale, DEFAULT_POINT_SIZE/ _actual_scale);
+            painter.setBrush(QBrush(_color_destination_radius));
             painter.drawEllipse(QPointF(x,y), rx, ry);
         }else{
             painter.setBrush(QBrush(_color_point));
@@ -133,6 +136,12 @@ void NodeViewer::recalculate_size()
 void NodeViewer::node_selected(std::string name)
 {
     _point_selected = name;
+    this->repaint();
+}
+
+void NodeViewer::destination_selected(std::string name)
+{
+    _destination_selected = name;
     this->repaint();
 }
 

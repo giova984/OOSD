@@ -39,6 +39,9 @@ private slots:
     void on_item_selected(QListWidgetItem *index);
     void on_connect_btn_clicked();
     void on_node_list_itemSelectionChanged();
+    void on_connect_list_activated( const QString & text );
+    void currentIndexChanged( const QString & text );
+
 
 private:
     std::unique_ptr<Ui::wifi> ui;
@@ -56,6 +59,7 @@ private:
 
 signals:
     void on_node_selected(const std::string& name);
+    void on_destination_selected(const std::string& name);
     void on_node_created(const std::string& name, const QPointF& pos, double radius);
     void on_node_deleted(const std::string& name);
     void on_connection_created(std::pair<std::string, std::string> conn);

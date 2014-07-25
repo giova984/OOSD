@@ -32,6 +32,7 @@ private:
     double _actual_scale;
 
     std::string _point_selected;
+    std::string _destination_selected;
     std::map<std::string, std::pair<QPointF, double>> _points;
     std::vector<std::pair<std::string, std::string>> _connections;
 
@@ -45,11 +46,11 @@ private:
     QColor _color_radius;
     QColor _color_point_selected;
     QColor _color_radius_selected;
+    QColor _color_destination_point;
+    QColor _color_destination_radius;
     QColor _color_connection;
 
     QPen _pen;
-    QBrush _brush;
-
     QRectF _screen_region;
 
     QFont _font;
@@ -66,6 +67,7 @@ signals:
 
 public slots:
     void node_selected(std::string name);
+    void destination_selected(std::string name);
     void node_created(std::string name, QPointF pos, double radius);
     void node_deleted(std::string name);
     void connection_created(std::pair<std::string, std::string>);

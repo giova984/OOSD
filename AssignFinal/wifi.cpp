@@ -35,6 +35,7 @@ wifi::wifi(QWidget *parent) :
     connect( this, SIGNAL(on_node_created(std::string, QPointF, double)), &this->_viewer, SLOT(node_created(std::string, QPointF, double)));
     connect( this, SIGNAL(on_node_deleted(std::string)), &this->_viewer, SLOT(node_deleted(std::string)));
     connect( this, SIGNAL(on_node_selected(std::string)), &this->_viewer, SLOT(node_selected(std::string)));
+    connect( this, SIGNAL(on_destination_selected(std::string)), &this->_viewer, SLOT(destination_selected(std::string)));
     connect( this, SIGNAL(on_connection_created(std::pair<std::string, std::string>)), &this->_viewer, SLOT(connection_created(std::pair<std::string, std::string>)));
     connect( this, SIGNAL(on_connection_erased(std::pair<std::string, std::string>)), &this->_viewer, SLOT(connection_deleted(std::pair<std::string, std::string>)));
 
@@ -78,6 +79,7 @@ void wifi::on_actionShow_Results_triggered()
 
 void wifi::updateLists(){
     ui->node_list->selectionModel()->reset();
+    on_item_selected(ui->node_list->currentItem());
     on_node_list_itemSelectionChanged();
 }
 
@@ -139,7 +141,7 @@ void wifi::on_del_btn_clicked()
 
 void wifi::on_item_selected( QListWidgetItem *item)
 {
-    std::string name = item->text().toUtf8().data();
+    std::string name {(item) ? item->text().toUtf8().data() : ""};
     emit on_node_selected(name);
     //qDebug( "selected ");
     //qDebug( item->text().toUtf8().data());
@@ -173,5 +175,16 @@ void wifi::on_node_list_itemSelectionChanged()
                 ui->connect_list->addItem(QString(n.first.c_str()));
             }
         }
+        emit currentIndexChanged (ui->connect_list->currentText());
     }
+}
+
+void wifi::on_connect_list_activated(const QString &text)
+{
+    emit on_destination_selected(text.toUtf8().data());
+}
+
+void wifi::currentIndexChanged(const QString &text)
+{
+    emit on_destination_selected(text.toUtf8().data());
 }
