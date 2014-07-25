@@ -231,8 +231,14 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionLoad"/>
     <addaction name="actionSave"/>
+    <addaction name="actionLoad"/>
+    <addaction name="separator"/>
+    <addaction name="actionClear"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoad_3x3"/>
+    <addaction name="actionLoad_4x4"/>
+    <addaction name="actionLoad_5x5"/>
    </widget>
    <widget class="QMenu" name="menuSimulation">
     <property name="title">
@@ -240,6 +246,7 @@
     </property>
     <addaction name="actionRun"/>
     <addaction name="actionShow_Results"/>
+    <addaction name="separator"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSimulation"/>
@@ -263,6 +270,26 @@
   <action name="actionShow_Results">
    <property name="text">
     <string>Show Results</string>
+   </property>
+  </action>
+  <action name="actionLoad_3x3">
+   <property name="text">
+    <string>Load 3x3</string>
+   </property>
+  </action>
+  <action name="actionLoad_4x4">
+   <property name="text">
+    <string>Load 4x4</string>
+   </property>
+  </action>
+  <action name="actionLoad_5x5">
+   <property name="text">
+    <string>Load 5x5</string>
+   </property>
+  </action>
+  <action name="actionClear">
+   <property name="text">
+    <string>Clear</string>
    </property>
   </action>
  </widget>

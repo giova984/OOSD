@@ -33,6 +33,10 @@ private slots:
     void on_actionLoad_triggered();
     void on_actionRun_triggered();
     void on_actionSave_triggered();
+    void on_actionClear_triggered();
+    void on_actionLoad_3x3_triggered();
+    void on_actionLoad_4x4_triggered();
+    void on_actionLoad_5x5_triggered();
     void on_actionShow_Results_triggered();
     void on_add_btn_clicked();
     void on_del_btn_clicked();
@@ -56,7 +60,9 @@ private:
     std::map<std::string, std::tuple<double, double, double>> _nodes;
     std::vector<std::pair<std::string, std::string>> _connections;
 
-    void updateLists();
+    void resetConfiguration();
+    void generateConfiguration(int n, int m);
+    void resetLists();
 
 signals:
     void on_node_selected(const std::string& name);

@@ -18,6 +18,15 @@
 
 using namespace MetaSim;
 
+#include<sstream>
+template <typename T>
+std::string to_string(T value)
+{
+    std::ostringstream os ;
+    os << value ;
+    return os.str() ;
+}
+
 wifi::wifi(QWidget *parent) :
     QMainWindow(parent),
     ui{std::unique_ptr<Ui::wifi>(new Ui::wifi)},
@@ -54,11 +63,76 @@ void wifi::on_actionSave_triggered()
 
 }
 
+void wifi::resetConfiguration(){
+    for (auto& n : _nodes)
+        emit on_node_deleted(n.first);
+    for (auto& c : _connections)
+        emit on_connection_erased(c);
+    _nodes.clear();
+    _connections.clear();
+    ui->node_list->clear();
+    ui->connect_list->clear();
+    resetLists();
+}
+
+void wifi::generateConfiguration(int n, int m)
+{
+    resetConfiguration();
+    for (int i=0; i<n; ++i){ //creating nodes and WifiInterfaces
+        for (int j=0; j<m; ++j){
+            std::string name {"Node_" + to_string(i) + "_" + to_string(j)};
+            _nodes[name] = std::make_tuple(i, j, 1.0);
+            emit on_node_created( name, QPointF(i, j), 1.0 );
+        }
+    }
+    for (int i=0; i<n; ++i){ //adding destinations
+        std::string from{"Node_" + to_string(i) + "_" + to_string(0)};
+        std::string to{"Node_" + to_string(i) + "_" + to_string(m-1)};
+        _connections.emplace_back(std::make_pair(from, to));
+        emit on_connection_created(std::make_pair(from, to));
+    }
+    for (int i=0; i<m; ++i){ //adding destinations
+        std::string from{"Node_" + to_string(0) + "_" + to_string(i)};
+        std::string to{"Node_" + to_string(m-1) + "_" + to_string(i)};
+        _connections.emplace_back(std::make_pair(from, to));
+        emit on_connection_created(std::make_pair(from, to));
+    }
+}
+
+void wifi::on_actionClear_triggered()
+{
+    resetConfiguration();
+}
+
+void wifi::on_actionLoad_3x3_triggered()
+{
+    resetConfiguration();
+    generateConfiguration(3, 3);
+}
+
+void wifi::on_actionLoad_4x4_triggered()
+{
+    resetConfiguration();
+    generateConfiguration(4, 4);
+}
+
+void wifi::on_actionLoad_5x5_triggered()
+{
+    resetConfiguration();
+    generateConfiguration(5, 5);
+}
+
 void wifi::on_actionRun_triggered()
 {
+    const int MIN_VAR = 1;
+    const int MAX_VAR = 1000;
+    const int MAX_PACKET_SIZE = 1500;
+    const int MAX_CONTENTION_TIME = 15;
+    const int PACKET_TO_SEND = 100;
+    const int NUMBER_OF_RUNS = 5;
     WifiLink link{"Channel_1"};
     WifiRoutingTable routing_table{};
-    std::unique_ptr<MetaSim::RandomVar> random{std::unique_ptr<RandomVar>(new MetaSim::UniformVar(1,100))};
+    std::unique_ptr<MetaSim::RandomVar> random{std::unique_ptr<RandomVar>(new MetaSim::UniformVar(MIN_VAR, MAX_VAR))};
 
     //Node-Interface creation
     std::map<std::string, std::unique_ptr<Node>> nodes;
@@ -79,14 +153,16 @@ void wifi::on_actionRun_triggered()
         nodes[c.first]->addDestNode(*nodes[c.second]);
     }
 
-    SIMUL.dbg.setStream("log.txt");
+    SIMUL.dbg.setStream("run.txt");
     SIMUL.dbg.enable(_WIFILINK_DBG);
     SIMUL.dbg.enable(_WIFIINTER_DBG);
     SIMUL.dbg.enable(_NODE_DBG);
 
     try {
+        SIMUL.dbg << "aaa";
+        SIMUL.dbg << "aaa" << std::endl;
       //  cout << "U = " << u << " M = " << _m << endl;
-       // SIMUL.run(SIM_LEN, 5);
+        SIMUL.run((MAX_VAR + MAX_PACKET_SIZE + MAX_CONTENTION_TIME) * PACKET_TO_SEND , NUMBER_OF_RUNS);
        // output.write(u);
     } catch (BaseExc &e) {
         cout << e.what() << endl;
@@ -98,7 +174,7 @@ void wifi::on_actionShow_Results_triggered()
 
 }
 
-void wifi::updateLists(){
+void wifi::resetLists(){
     ui->node_list->selectionModel()->reset();
     on_item_selected(ui->node_list->currentItem());
     on_node_list_itemSelectionChanged();
@@ -122,7 +198,7 @@ void wifi::on_add_btn_clicked()
         }
     }
 
-    updateLists();
+    resetLists();
 }
 
 void wifi::on_del_btn_clicked()
@@ -145,7 +221,7 @@ void wifi::on_del_btn_clicked()
         }
     }
 
-    updateLists();
+    resetLists();
 }
 
 
@@ -155,8 +231,6 @@ void wifi::on_item_selected( QListWidgetItem *item)
     emit on_node_selected(name);
     //qDebug( "selected ");
     //qDebug( item->text().toUtf8().data());
-    //const Node *node = _nodes
-
 }
 
 void wifi::on_connect_btn_clicked()
@@ -172,7 +246,7 @@ void wifi::on_connect_btn_clicked()
         }
     }
 
-    updateLists();
+    resetLists();
 }
 
 void wifi::on_node_list_itemSelectionChanged()
