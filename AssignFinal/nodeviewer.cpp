@@ -60,26 +60,36 @@ void NodeViewer::drawPoints(){
     for (auto& p : _points){
         auto x =  p.second.first.x() * PIXEL_TO_WIDTH;
         auto y =  p.second.first.y() * PIXEL_TO_HEIGHT;
-
         auto rx =  p.second.second * PIXEL_TO_WIDTH;
         auto ry =  p.second.second * PIXEL_TO_HEIGHT;
 
-        if(p.first == _point_selected){
-            painter.setBrush(QBrush(_color_point_selected));
-            painter.drawEllipse(QPointF(x,y), DEFAULT_POINT_SIZE/ _actual_scale, DEFAULT_POINT_SIZE/ _actual_scale);
-            painter.setBrush(QBrush(_color_radius_selected));
-            painter.drawEllipse(QPointF(x,y), rx, ry);
-        }else if (p.first == _destination_selected){
-            painter.setBrush(QBrush(_color_destination_point));
-            painter.drawEllipse(QPointF(x,y), DEFAULT_POINT_SIZE/ _actual_scale, DEFAULT_POINT_SIZE/ _actual_scale);
-            painter.setBrush(QBrush(_color_destination_radius));
-            painter.drawEllipse(QPointF(x,y), rx, ry);
-        }else{
+        if(p.first != _point_selected && p.first != _destination_selected){
             painter.setBrush(QBrush(_color_point));
             painter.drawEllipse(QPointF(x,y), DEFAULT_POINT_SIZE/ _actual_scale, DEFAULT_POINT_SIZE/ _actual_scale);
             painter.setBrush(QBrush(_color_radius));
             painter.drawEllipse(QPointF(x,y), rx, ry);
         }
+    }
+    // selected nodes are drawn on top of other nodes (Z-ordering)
+    if (_destination_selected != ""){
+        auto x =  _points[_destination_selected].first.x() * PIXEL_TO_WIDTH;
+        auto y =  _points[_destination_selected].first.y() * PIXEL_TO_HEIGHT;
+        auto rx =  _points[_destination_selected].second * PIXEL_TO_WIDTH;
+        auto ry =  _points[_destination_selected].second * PIXEL_TO_HEIGHT;
+        painter.setBrush(QBrush(_color_destination_point));
+        painter.drawEllipse(QPointF(x,y), DEFAULT_POINT_SIZE/ _actual_scale, DEFAULT_POINT_SIZE/ _actual_scale);
+        painter.setBrush(QBrush(_color_destination_radius));
+        painter.drawEllipse(QPointF(x,y), rx, ry);
+    }
+    if(_point_selected != ""){
+        auto x =  _points[_point_selected].first.x() * PIXEL_TO_WIDTH;
+        auto y =  _points[_point_selected].first.y() * PIXEL_TO_HEIGHT;
+        auto rx =  _points[_point_selected].second * PIXEL_TO_WIDTH;
+        auto ry =  _points[_point_selected].second * PIXEL_TO_HEIGHT;
+        painter.setBrush(QBrush(_color_point_selected));
+        painter.drawEllipse(QPointF(x,y), DEFAULT_POINT_SIZE/ _actual_scale, DEFAULT_POINT_SIZE/ _actual_scale);
+        painter.setBrush(QBrush(_color_radius_selected));
+        painter.drawEllipse(QPointF(x,y), rx, ry);
     }
 }
 

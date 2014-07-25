@@ -82,6 +82,7 @@ void wifi::generateConfiguration(int n, int m)
         for (int j=0; j<m; ++j){
             std::string name {"Node_" + to_string(i) + "_" + to_string(j)};
             _nodes[name] = std::make_tuple(i, j, 1.0);
+            new QListWidgetItem(QString(name.c_str()), ui->node_list);
             emit on_node_created( name, QPointF(i, j), 1.0 );
         }
     }
@@ -127,8 +128,10 @@ void wifi::on_actionRun_triggered()
     const int MIN_VAR = 1;
     const int MAX_VAR = 1000;
     const int MAX_PACKET_SIZE = 1500;
-    const int MAX_CONTENTION_TIME = 15;
+    const int MAX_CONTENTION_TIME = 10;
+    const int MAX_NUMBER_OF_COLLISION = 100;
     const int PACKET_TO_SEND = 100;
+
     const int NUMBER_OF_RUNS = 5;
     WifiLink link{"Channel_1"};
     WifiRoutingTable routing_table{};
@@ -162,7 +165,7 @@ void wifi::on_actionRun_triggered()
         SIMUL.dbg << "aaa";
         SIMUL.dbg << "aaa" << std::endl;
       //  cout << "U = " << u << " M = " << _m << endl;
-        SIMUL.run((MAX_VAR + MAX_PACKET_SIZE + MAX_CONTENTION_TIME) * PACKET_TO_SEND , NUMBER_OF_RUNS);
+        SIMUL.run((MAX_VAR + MAX_PACKET_SIZE + MAX_CONTENTION_TIME*MAX_NUMBER_OF_COLLISION) * PACKET_TO_SEND , NUMBER_OF_RUNS);
        // output.write(u);
     } catch (BaseExc &e) {
         cout << e.what() << endl;
