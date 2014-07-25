@@ -21,16 +21,14 @@ using namespace MetaSim;
 wifi::wifi(QWidget *parent) :
     QMainWindow(parent),
     ui{std::unique_ptr<Ui::wifi>(new Ui::wifi)},
-    _link{"Channel_1"},
-    _routing_table{},
-    _random{std::unique_ptr<RandomVar>(new MetaSim::UniformVar(1,100))},
+    _nodes{},
     _connections{}
 {
     ui->setupUi(this);
 
     ui->viewer_layout->addWidget(&_viewer);
     //WList of nodes widget connection
-    connect( ui->node_list, SIGNAL(itemClicked(QListWidgetItem *)), this, SLOT(on_item_selected(QListWidgetItem *)));
+//    connect( ui->node_list, SIGNAL(itemClicked(QListWidgetItem *)), this, SLOT(on_item_selected(QListWidgetItem *)));
     //Node Viewer connections
     connect( this, SIGNAL(on_node_created(std::string, QPointF, double)), &this->_viewer, SLOT(node_created(std::string, QPointF, double)));
     connect( this, SIGNAL(on_node_deleted(std::string)), &this->_viewer, SLOT(node_deleted(std::string)));
@@ -58,6 +56,29 @@ void wifi::on_actionSave_triggered()
 
 void wifi::on_actionRun_triggered()
 {
+    WifiLink link{"Channel_1"};
+    WifiRoutingTable routing_table{};
+    std::unique_ptr<MetaSim::RandomVar> random{std::unique_ptr<RandomVar>(new MetaSim::UniformVar(1,100))};
+
+    //Node-Interface creation
+    std::map<std::string, std::unique_ptr<Node>> nodes;
+    std::map<std::string,std::unique_ptr<WifiInterface>> interfaces;
+    for (auto& n : _nodes){
+        std::string name = n.first;
+        nodes[name] = std::unique_ptr<Node>(new Node(name));
+        interfaces[name] = std::unique_ptr<WifiInterface>(new WifiInterface(
+                                                               std::string("interface").append(name),
+                                                               *nodes[name],
+                                                               make_pair(std::get<0>(n.second), std::get<1>(n.second)),
+                                                               std::get<2>(n.second),
+                                                               link,
+                                                               &routing_table) );
+        nodes[name]->setInterval(std::unique_ptr<MetaSim::DeltaVar>(new MetaSim::DeltaVar(random->get())));
+    }
+    for (auto& c : _connections){
+        nodes[c.first]->addDestNode(*nodes[c.second]);
+    }
+
     SIMUL.dbg.setStream("log.txt");
     SIMUL.dbg.enable(_WIFILINK_DBG);
     SIMUL.dbg.enable(_WIFIINTER_DBG);
@@ -91,19 +112,8 @@ void wifi::on_add_btn_clicked()
         double radius = ui->spin_radius->value();
 
         if(_nodes.find(name) == _nodes.end() ){
+            _nodes[name] = std::make_tuple(pos.x(), pos.y(), radius);
             new QListWidgetItem(ui->node_name_text->text(), ui->node_list);
-            //Node-Interface creation
-            _nodes[name] = std::unique_ptr<Node>(new Node(name));
-            _interfaces[name] = std::unique_ptr<WifiInterface>(new WifiInterface(
-                                                                   std::string("interface").append(name),
-                                                                   *_nodes[name],
-                                                                   make_pair(pos.x(),pos.y()),
-                                                                   radius,
-                                                                   _link,
-                                                                   &_routing_table) );
-            _random->get();
-            _nodes[name]->setInterval(std::unique_ptr<MetaSim::DeltaVar>(new MetaSim::DeltaVar(_random->get())));
-
             emit on_node_created( name, pos, radius );
         }else{
             QMessageBox msgBox;
@@ -120,7 +130,7 @@ void wifi::on_del_btn_clicked()
     if(ui->node_list->selectedItems().size() > 0){
         std::string name = ui->node_list->selectedItems().front()->text().toUtf8().data();
         _nodes.erase(_nodes.find((name)));
-        _interfaces.erase(_interfaces.find(name));
+        //_interfaces.erase(_interfaces.find(name));
         delete ui->node_list->selectedItems().front();
         emit on_node_deleted(name);
         //removing connection related to erased node
@@ -175,8 +185,9 @@ void wifi::on_node_list_itemSelectionChanged()
                 ui->connect_list->addItem(QString(n.first.c_str()));
             }
         }
-        emit currentIndexChanged (ui->connect_list->currentText());
+        emit on_node_selected(name);
     }
+    emit currentIndexChanged (ui->connect_list->currentText());
 }
 
 void wifi::on_connect_list_activated(const QString &text)

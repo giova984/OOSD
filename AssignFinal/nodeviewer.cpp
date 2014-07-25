@@ -131,17 +131,22 @@ void NodeViewer::recalculate_size()
     for (auto p : _points){
        update_size(p.second.first);
     }
+    this->repaint();
 }
 
 void NodeViewer::node_selected(std::string name)
 {
     _point_selected = name;
+    qDebug("node");
+    qDebug(name.c_str());
     this->repaint();
 }
 
 void NodeViewer::destination_selected(std::string name)
 {
     _destination_selected = name;
+    qDebug("dest");
+    qDebug(name.c_str());
     this->repaint();
 }
 
