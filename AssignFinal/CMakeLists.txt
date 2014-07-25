@@ -22,5 +22,6 @@ netinterface.cpp
 wifi.hpp wifi.cpp
 routing.cpp
 example.cpp
+nodeviewer.cpp
 )
 target_link_libraries(wifi ${METASIM_LIBRARY} Qt5::Widgets)
