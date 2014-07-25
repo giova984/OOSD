@@ -33,6 +33,7 @@ private:
 
     std::string _point_selected;
     std::map<std::string, std::pair<QPointF, double>> _points;
+    std::vector<std::pair<std::string, std::string>> _connections;
 
     const static int DEFAULT_SCALE = 10;
     const static int DEFAULT_POINT_SIZE = 100;
@@ -44,6 +45,7 @@ private:
     QColor _color_radius;
     QColor _color_point_selected;
     QColor _color_radius_selected;
+    QColor _color_connection;
 
     QPen _pen;
     QBrush _brush;
@@ -55,6 +57,7 @@ private:
     void drawScreen();
     void drawPoints();
     void drawGrid();
+    void drawConnections();
 
     void update_size(const QPointF& p);
     void recalculate_size();
@@ -62,9 +65,11 @@ private:
 signals:
 
 public slots:
-    void node_selected(const std::string& name);
-    void node_created(const std::string& name, const QPointF& pos, double radius);
-    void node_deleted(const std::string& name);
+    void node_selected(std::string name);
+    void node_created(std::string name, QPointF pos, double radius);
+    void node_deleted(std::string name);
+    void connection_created(std::pair<std::string, std::string>);
+    void connection_deleted(std::pair<std::string, std::string>);
 };
 
 #endif // NODEVIEWER_HPP
