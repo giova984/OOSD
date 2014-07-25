@@ -8,6 +8,12 @@
 #include <QRectF>
 #include <QPointF>
 
+#include <map>
+#include <string>
+#include <utility>
+
+class QResizeEvent;
+
 class NodeViewer :public QWidget
 {
     Q_OBJECT
@@ -15,31 +21,34 @@ class NodeViewer :public QWidget
 public:
     explicit NodeViewer( QWidget * parent = 0 );
     virtual ~NodeViewer();
+//    void addNode(const std::string& name, const QPointF& pos);
+//    void delNode(const std::string& name);
+
 protected:
     void paintEvent(QPaintEvent *event);
+    void resizeEvent (QResizeEvent * event );
 private:
 
-    int _point_selected;
+    double _actual_scale;
 
-    const static int DEFAULT_FONT_SIZE = 15;
+    std::string _point_selected;
+    std::map<std::string, std::pair<QPointF, double>> _points;
 
-
-    QPen _pen_text;
-    QPen _pen_screen;
-    QPen _pen_point;
-    QPen _pen_grid;
-
-    QBrush _brush_screen;
-    QBrush _brush_point;
-    QBrush _brush_grid;
-
-    std::vector<QPointF> _points;
-    QRectF _screen_region;
+    const static int DEFAULT_SCALE = 10;
+    const static int DEFAULT_POINT_SIZE = 100;
+    const static int DEFAULT_RADIUS_STROKE_SIZE = 2;
 
     QColor _screen_region_color;
     QColor _grid_color;
     QColor _color_point;
-    QColor _color_text;
+    QColor _color_radius;
+    QColor _color_point_selected;
+    QColor _color_radius_selected;
+
+    QPen _pen;
+    QBrush _brush;
+
+    QRectF _screen_region;
 
     QFont _font;
 
@@ -47,10 +56,15 @@ private:
     void drawPoints();
     void drawGrid();
 
+    void update_size(const QPointF& p);
+    void recalculate_size();
+
 signals:
 
 public slots:
-
+    void node_selected(const std::string& name);
+    void node_created(const std::string& name, const QPointF& pos, double radius);
+    void node_deleted(const std::string& name);
 };
 
 #endif // NODEVIEWER_HPP
