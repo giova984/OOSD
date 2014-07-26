@@ -27,9 +27,10 @@ message.cpp
 link.cpp
 netinterface.cpp
 routing.cpp
-example.cpp
+main.cpp
 nodeviewer.cpp
 wifi.cpp
+wifistatistics.cpp
 qcustomplot.h qcustomplot.cpp
 plotresults.cpp
 )

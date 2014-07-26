@@ -53,12 +53,6 @@ private:
     NodeViewer _viewer;
     PlotResults _plotter;
 
-//    WifiLink _link;
-//    WifiRoutingTable _routing_table;
-    //std::map<std::string, std::unique_ptr<Node>> _nodes;
-    //std::map<std::string,std::unique_ptr<WifiInterface>> _interfaces;
-//    std::unique_ptr<MetaSim::RandomVar> _random;
-
     std::map<std::string, std::tuple<double, double, double>> _nodes;
     std::vector<std::pair<std::string, std::string>> _connections;
 

@@ -8,6 +8,7 @@
 #include <metasim.hpp>
 //#include <entity.hpp>
 //#include <event.hpp>
+#include <randomvar.hpp>
 
 #define _WIFIINTER_DBG "WifiInterface"
 
@@ -49,11 +50,13 @@ protected:
   int _coll;
   bool _isTransmitting;
 
+  std::unique_ptr<MetaSim::RandomGen> _cont_rand_gen;
+
 public:
 
   MetaSim::GEvent<WifiInterface> _trans_evt;
 
-  WifiInterface(std::string const &name, Node& n, std::pair<double, double> pos2D, double radius, WifiLink& l, WifiRoutingTable* rt = nullptr);
+  WifiInterface(std::string const &name, Node& n, std::pair<double, double> pos2D, double radius, WifiLink& l, MetaSim::RandNum cp_seed = {0}, WifiRoutingTable* rt = nullptr);
   virtual ~WifiInterface();
 
   MetaSim::Tick nextTransTime();

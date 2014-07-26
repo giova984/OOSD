@@ -21,8 +21,8 @@ NetInterface::~NetInterface()
 {
 }
 
-WifiInterface::WifiInterface(string const &name, Node &n, std::pair<double, double> pos2D, double radius, WifiLink &l, WifiRoutingTable *rt) :
-        NetInterface(name,n), position2D(pos2D), radius(radius),_link(&l), _routing(rt),
+WifiInterface::WifiInterface(string const &name, Node &n, std::pair<double, double> pos2D, double radius, WifiLink &l, MetaSim::RandNum cp_seed, WifiRoutingTable *rt) :
+        NetInterface(name,n), position2D(pos2D), radius(radius),_link(&l), _cont_rand_gen(nullptr), _routing(rt),
         _queue(), _received(), _blocked(),
         _trans_evt()
 {
@@ -36,6 +36,8 @@ WifiInterface::WifiInterface(string const &name, Node &n, std::pair<double, doub
         _cont_per = _link->getContentionPeriod();
         _backoff = _cont_per;
         _coll = 0;
+
+        _cont_rand_gen = std::unique_ptr<RandomGen>(new RandomGen(cp_seed));
 }
 
 WifiInterface::~WifiInterface()
@@ -50,6 +52,9 @@ void WifiInterface::newRun()
 
         _received.clear();
         _blocked.clear();
+
+        std::cout << "seed " << _cont_rand_gen->getCurrSeed() << std::endl;
+        _cont_rand_gen = std::unique_ptr<RandomGen>(new RandomGen(_cont_rand_gen->getCurrSeed()));
 
 }
  
@@ -141,8 +146,10 @@ Tick WifiInterface::nextTransTime()
 
         if (_coll <= 10) _backoff *= 2;
 
-        UniformVar a(1, _backoff);
+    //FIXED
+//        return (Tick) (double)_cont_rand_gen->getCurrSeed();
 
+        UniformVar a(1, _backoff, _cont_rand_gen.get());
         return (Tick) a.get();
 }
 
@@ -170,10 +177,6 @@ void WifiInterface::onMessageReceived(Message *m)
             send(m);
         }
 
-
-
-
-        
 }
 
 Message * WifiInterface::receive(Node *n)

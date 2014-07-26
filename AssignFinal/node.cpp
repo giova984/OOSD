@@ -21,6 +21,7 @@ void Node::newRun()
 {
     sent_messages = 0;
     if (_interval != nullptr)
+        //FIXED_send_evt.post((int)1000);
         _send_evt.post((int)_interval->get());
     //else node doesn't send messages
 }
@@ -77,8 +78,9 @@ void Node::onSend(Event *e)
     if (_nodes.size() <= 0)
         return;
 
-    UniformVar len(100,1500);
-    UniformVar n(0, _nodes.size());
+    RandomGen gen(12345);
+    UniformVar len(100,1500,&gen );
+    UniformVar n(0, _nodes.size(), &gen);
     int i = (int)n.get();
 
     DBGENTER(_NODE_DBG);
@@ -86,7 +88,9 @@ void Node::onSend(Event *e)
     DBGPRINT("dest node = " << _nodes[i]->getName());
     // creates a new message and send it!!
     Message *m = new Message((int)len.get(), this, _nodes[i]);
+    //FIXEDMessage *m = new Message(1000, this, _nodes[0]);
     _net_interf->send(m);
     _send_evt.post(SIMUL.getTime() + (Tick)_interval->get());
+    //FIXED_send_evt.post(SIMUL.getTime() + (Tick)1000);
 
 }
