@@ -43,8 +43,8 @@ int main_ui(int argc, char** argv);
 
 int main(int argc, char** argv)
 {
-    return main_tests(argc, argv);
-    //return main_ui(argc, argv);
+    //return main_tests(argc, argv);
+    return main_ui(argc, argv);
     //return main_ex2();
     //return main_simple();
 
@@ -104,18 +104,6 @@ int main_ex2(){
 
         GnuPlotOutput output;
         output.init();
-
-        //        std::vector<std::unique_ptr<MetaSim::RandomGen>> _gens;
-        //        std::vector<std::unique_ptr<MetaSim::RandomVar>> _vars;
-        //        _gens.reserve(_m*_m);
-        //        _vars.reserve(_m*_m);
-        //        for (int i=0; i<_m; ++i){
-        //            for (int j=0; j<_m; ++j){
-        //                int seed = j + 100*i + 10000*_m;
-        //                _gens.emplace_back( std::unique_ptr<MetaSim::RandomGen>(new RandomGen(seed)) );
-        //                _vars.emplace_back( std::unique_ptr<RandomVar>( new UniformVar(1, l1, _gens.back().get()) );
-        //            }
-        //        }
 
         for (u=UMIN; u<= UMAX; u+=USTEP) {
             double l1 = MAX_RAND / u;

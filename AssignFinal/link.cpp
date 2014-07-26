@@ -63,15 +63,13 @@ void WifiLink::endRun()
 }
 
 void WifiLink::registerInterface(WifiInterface * interf){
-    auto e = new MetaSim::GEvent<WifiLink>();
-    register_handler(*e, this, &WifiLink::onEndContention);
-    _end_contention_evts[interf] = unique_ptr<MetaSim::Event>(e);
-    e = new MetaSim::GEvent<WifiLink>();
-    register_handler(*e, this, &WifiLink::onCollision);
-    _collision_evts[interf] = unique_ptr<MetaSim::Event>(e);
-    e = new MetaSim::GEvent<WifiLink>();
-    register_handler(*e, this, &WifiLink::onEndTransmission);
-    _end_transmission_evts[interf] = unique_ptr<MetaSim::Event>(e);
+    _end_contention_evts[interf] = unique_ptr<MetaSim::GEvent<WifiLink>>(new MetaSim::GEvent<WifiLink>());
+    register_handler(*(static_cast<MetaSim::GEvent<WifiLink>*> (_end_contention_evts[interf].get())), this, &WifiLink::onEndContention);
+    _collision_evts[interf] = unique_ptr<MetaSim::Event>(new MetaSim::GEvent<WifiLink>());
+    register_handler(*(static_cast<MetaSim::GEvent<WifiLink>*> (_collision_evts[interf].get())), this, &WifiLink::onCollision);
+    _end_transmission_evts[interf] = unique_ptr<MetaSim::Event>(new MetaSim::GEvent<WifiLink>());
+    register_handler(*(static_cast<MetaSim::GEvent<WifiLink>*> (_end_transmission_evts[interf].get())), this, &WifiLink::onEndTransmission);
+
     _isBusy[interf] = false;
     _isContending[interf] = false;
     _isCollision[interf] = false;
@@ -107,7 +105,6 @@ void WifiLink::contend(WifiInterface *wifi, Message *m)
                 for (auto& i : _isContending)
                     if(i.second && wifi->canTransmitTo(i.first)) //drop event only if transmitter can interfere with destination
                         _end_contention_evts[i.first]->drop();
-                //_end_contention_evt.drop();
 
                 bool _isCollisionNear = false;
                 for (auto& i : _isCollision)

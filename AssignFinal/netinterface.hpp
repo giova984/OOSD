@@ -18,6 +18,8 @@ class Message;
 class WifiLink;
 class WifiRoutingTable;
 
+#define RECV_BUFFER_SIZE 1000
+
 class NetInterface : public MetaSim::Entity {
 protected:
   Node *_node;

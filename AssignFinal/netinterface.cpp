@@ -22,7 +22,7 @@ NetInterface::~NetInterface()
 }
 
 WifiInterface::WifiInterface(string const &name, Node &n, std::pair<double, double> pos2D, double radius, WifiLink &l, MetaSim::RandNum cp_seed, WifiRoutingTable *rt) :
-        NetInterface(name,n), position2D(pos2D), radius(radius),_link(&l), _cont_rand_gen(nullptr), _routing(rt),
+        NetInterface(name,n), position2D(pos2D), radius(radius),_link(&l), _cont_rand_gen(new RandomGen(cp_seed)), _routing(rt),
         _queue(), _received(), _blocked(),
         _trans_evt()
 {
@@ -37,19 +37,26 @@ WifiInterface::WifiInterface(string const &name, Node &n, std::pair<double, doub
         _backoff = _cont_per;
         _coll = 0;
 
-        _cont_rand_gen = std::unique_ptr<RandomGen>(new RandomGen(cp_seed));
+        //_cont_rand_gen = std::unique_ptr<RandomGen>();
 }
 
 WifiInterface::~WifiInterface()
-{}
+{
+    for (auto m : _queue)
+        delete m;
+    for (auto m : _received)
+        delete m;
+}
 
 void WifiInterface::newRun()
 {
         vector<Message *>::iterator i;
 
+        for (auto m : _queue)
+            delete m;
+        for (auto m : _received)
+            delete m;
         _queue.clear();
-        for (i = _received.begin(); i != _received.end(); ++i) delete (*i);
-
         _received.clear();
         _blocked.clear();
 
@@ -149,10 +156,11 @@ Tick WifiInterface::nextTransTime()
         if (_coll <= 10) _backoff *= 2;
 
     //FIXED
-//        return (Tick) (double)_cont_rand_gen->getCurrSeed();
+        //return (Tick) (double)_cont_rand_gen->getCurrSeed();
 
         UniformVar a(1, _backoff, _cont_rand_gen.get());
-        return (Tick) a.get();
+        return (Tick) (int)a.get();
+
 }
 
 void WifiInterface::onMessageReceived(Message *m)
@@ -169,9 +177,12 @@ void WifiInterface::onMessageReceived(Message *m)
                     (*i)->onMessageReceived(m);
                     _blocked.erase(i);
             }
-            else
+            else{
+                if( _received.size() < RECV_BUFFER_SIZE )
                     _received.push_back(m);
-
+                else
+                    delete m;
+            }
             _node->_recv_evt.process();
         }
         else // else forward packet to next hop

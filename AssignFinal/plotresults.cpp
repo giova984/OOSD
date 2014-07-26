@@ -11,12 +11,16 @@ PlotResults::PlotResults(QWidget *parent) :
     ui->setupUi(this);
 
     setWindowTitle("Simulation Results");
-    // create graph and assign data to it:
+    // add two new graphs and set their look:
     ui->customPlot->addGraph();
+    ui->customPlot->graph(0)->setPen(QPen(Qt::blue)); // line color blue for first graph
+//    ui->customPlot->graph(0)->setBrush(QBrush(QColor(0, 0, 255, 20))); // first graph will be filled with translucent blue
+    ui->customPlot->addGraph();
+    ui->customPlot->graph(1)->setPen(QPen(Qt::red)); // line color red for second graph
 
     // give the axes some labels:
     ui->customPlot->xAxis->setLabel("Send period (Ticks)");
-    ui->customPlot->yAxis->setLabel("collisions (link level)");
+    ui->customPlot->yAxis->setLabel("link level: collisions(blue), lost messages (red)");
 }
 
 PlotResults::~PlotResults()
@@ -24,26 +28,19 @@ PlotResults::~PlotResults()
     delete ui;
 }
 
-void PlotResults::setdata(const std::vector<double> &key, std::vector<double> &value)
+void PlotResults::setdata(unsigned int graph, const std::vector<std::pair<double, double> > &data)
 {
-    _key = QVector<double>::fromStdVector(key);
-    _value = QVector<double>::fromStdVector(value);
-    ui->customPlot->graph(0)->setData(_key, _value);
-    ui->customPlot->graph(0)->rescaleAxes(true);
+    if (graph > ui->customPlot->graphCount())
+        return;
 
-    ui->customPlot->replot();
-}
-
-void PlotResults::setdata(const std::vector<std::pair<double, double> > &data)
-{
     _key.clear();
     _value.clear();
     for (auto& v : data){
         _key.push_back(v.first);
         _value.push_back(v.second);
     }
-    ui->customPlot->graph(0)->setData(_key, _value);
-    ui->customPlot->graph(0)->rescaleAxes(true);
+    ui->customPlot->graph(graph)->setData(_key, _value);
+    ui->customPlot->graph(graph)->rescaleAxes(true);
 
     ui->customPlot->replot();
 }

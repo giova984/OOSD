@@ -16,8 +16,7 @@ public:
     explicit PlotResults(QWidget *parent = 0);
     ~PlotResults();
 
-    void setdata(const std::vector<double>& key, std::vector<double>& value);
-    void setdata(const std::vector<std::pair<double, double>>& data);
+    void setdata(unsigned int graph, const std::vector<std::pair<double, double>>& data);
 
 private:
     Ui::PlotResults *ui;

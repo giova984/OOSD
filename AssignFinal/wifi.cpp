@@ -197,12 +197,15 @@ void wifi::on_actionRun_triggered()
     const int NUMBER_OF_RUNS = 5;
     WifiLink link{"Channel_1"};
     WifiRoutingTable routing_table{};
-    std::vector<double> intervals {10,100,250,500,1000,1500,2000};
+    //std::vector<double> intervals {10,100,250,500,1000,1500,2000};
+    std::vector<double> intervals {100,500,1000,1500,2000,2500,3000,3500,4000};
 
     LinkCollisionStat lc_stat("");
     std::vector<std::pair<double, double>> lc_stat_results{};
-
     lc_stat.attach(&link);
+    LinkMessageLostStat lml_stat("");
+    std::vector<std::pair<double, double>> lml_stat_results{};
+    lml_stat.attach(&link);
 
     //Node-Interface creation
     std::map<std::string, std::unique_ptr<Node>> nodes;
@@ -228,19 +231,15 @@ void wifi::on_actionRun_triggered()
         nodes[c.first]->addDestNode(*nodes[c.second]);
     }
 
-//    SIMUL.dbg.setStream("run.txt");
-    //    SIMUL.dbg.enable(_WIFILINK_DBG);
-    //    SIMUL.dbg.enable(_WIFIINTER_DBG);
-    //    SIMUL.dbg.enable(_NODE_DBG);
-
     for(int pass = 0; pass<intervals.size(); ++pass){
         const int MIN_VAR = 1;
+//        const int MIN_VAR = (pass == 0)? 1 : intervals[pass-1];
         const int MAX_VAR = intervals[pass];
         MetaSim::UniformVar random{MetaSim::UniformVar(MIN_VAR, MAX_VAR, &fixed_generator)};
         //setting up nodes sending intervals
         for (auto& n : _nodes){
             auto delta = random.get();
-            std::cout << "node " << n.first << " unif " << delta << std::endl;
+            //std::cout << "node " << n.first << " unif " << delta << std::endl;
             //nodes[n.first]->setInterval(std::unique_ptr<RandomVar>(new MetaSim::DeltaVar(delta)));
             nodes[n.first]->setInterval(std::unique_ptr<RandomVar>(new MetaSim::DeltaVar(intervals[pass])));
         }
@@ -248,8 +247,9 @@ void wifi::on_actionRun_triggered()
             Tick estimated_simul_time{(MAX_VAR + MAX_PACKET_SIZE + MAX_CONTENTION_TIME*MAX_NUMBER_OF_COLLISION) * PACKET_TO_SEND};
             SIMUL.run(estimated_simul_time , NUMBER_OF_RUNS);
             //collecting results
-            std::cout << "result " << MAX_VAR << " " <<lc_stat.getMean() << std::endl;
+            //std::cout << "result " << MAX_VAR << " " <<lc_stat.getMean() << std::endl;
             lc_stat_results.emplace_back( std::make_pair(MAX_VAR, lc_stat.getMean()));
+            lml_stat_results.emplace_back( std::make_pair(MAX_VAR, lml_stat.getMean()));
         } catch (BaseExc &e) {
             cout << e.what() << endl;
             QMessageBox msgBox;
@@ -259,7 +259,8 @@ void wifi::on_actionRun_triggered()
     }
 
     //populating graphs
-    _plotter.setdata(lc_stat_results);
+    _plotter.setdata(0,lc_stat_results);
+    _plotter.setdata(1,lml_stat_results);
     on_actionShow_Results_triggered();
 }
 
