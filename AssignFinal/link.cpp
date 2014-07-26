@@ -82,7 +82,7 @@ bool WifiLink::isBusy(WifiInterface *in)
 {
     //return _isBusy;
     for (auto& t : _isBusy){
-        if (t.second && in->interfereWith(t.first))
+        if (t.second && in->canTransmitTo(t.first))
             return true;
     }
     return false;
@@ -98,20 +98,20 @@ void WifiLink::contend(WifiInterface *wifi, Message *m)
 
         bool _isContendingNear = false;
         for (auto& i : _isContending){
-            if (i.second && wifi->interfereWith(i.first))
+            if (i.second && i.first->canTransmitTo(wifi))
                 _isContendingNear = true;
         }
 
         if (_isContendingNear) {
                 //dropping near events
                 for (auto& i : _isContending)
-                    if(i.second && wifi->interfereWith(i.first))
+                    if(i.second && wifi->canTransmitTo(i.first)) //drop event only if transmitter can interfere with destination
                         _end_contention_evts[i.first]->drop();
                 //_end_contention_evt.drop();
 
                 bool _isCollisionNear = false;
                 for (auto& i : _isCollision)
-                    if(i.second && wifi->interfereWith(i.first))
+                    if(i.second && wifi->canTransmitTo(i.first))
                         _isCollisionNear = true;
                 if (!_isCollisionNear) {
                         _isCollision[wifi] = true;
@@ -169,7 +169,7 @@ void WifiLink::onCollision(Event *e)
 
     auto wifi = getEventInterface(e);
     for (auto& i : _isContending)
-        if (i.second && wifi->interfereWith(i.first)){
+        if (i.second && wifi->canTransmitTo(i.first)){
             _isContending[i.first] = false;
             _isCollision[i.first] = false;
             _isBusy[i.first] = false;
@@ -196,16 +196,15 @@ void WifiLink::onEndTransmission(Event *e)
     WifiInterface *d = dynamic_cast<WifiInterface *>(dst);
     //WifiInterface *s = dynamic_cast<WifiInterface *>(src);
 
-    if( d != nullptr && wifi->interfereWith(d) ){
+    if( d != nullptr && wifi->canTransmitTo(d) ){
         // detecting if hidden terminal event occurred
         bool ht_detected = false;
         for (auto& i : _isContending){
-            //TODO decidere se anche la contesa interferisce con la trasmissione nel rilevamento dell'ht problem
-            if (i.second && i.first->interfereWith(d))
+            if (i.second && i.first->canTransmitTo(d))
                 ht_detected = true;
         }
         for (auto& i : _isBusy){
-            if (i.second && i.first->interfereWith(d))
+            if (i.second && i.first->canTransmitTo(d))
                 ht_detected = true;
         }
         if (!ht_detected){

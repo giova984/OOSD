@@ -71,9 +71,11 @@ double distance(const std::pair<double, double> &a, const std::pair<double, doub
     return sqrt( x*x + y*y );
 }
 
-bool WifiInterface::interfereWith(WifiInterface *i){
-    if (distance(position2D, i->getPosition2D()) <= max(radius, i->getRadius()))
-            return true;
+bool WifiInterface::canTransmitTo(WifiInterface *i){
+//    if (distance(position2D, i->getPosition2D()) <= max(radius, i->getRadius()))
+//            return true;
+    if (distance(position2D, i->getPosition2D()) <= radius)
+        return true;
     return false;
 }
 

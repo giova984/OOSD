@@ -38,7 +38,7 @@ NetInterface* WifiRoutingTable::getNextHop(NetInterface *from, NetInterface *to)
 
         double min_dist = distance(_from->getPosition2D(), _to->getPosition2D());
         for (auto i : _interfaces){
-            if(_from->interfereWith(i)){
+            if(_from->canTransmitTo(i)){
                 double dist = distance( i->getPosition2D(), _to->getPosition2D());
                 if ( dist < min_dist ){
                     min_dist = dist;
