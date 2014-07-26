@@ -5,6 +5,7 @@ find_library(METASIM_LIBRARY metasim)
 
 add_definitions("-std=c++11")
 
+#occorre settare CMAKE_PREFIX_PATH alla directori che contiene la libreria metasim
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 find_package(Qt5Widgets)
