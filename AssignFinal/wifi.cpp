@@ -15,6 +15,10 @@
 #include <qdebug.h>
 #include <QListWidgetItem>
 #include <QMessageBox>
+#include <QFileDialog>
+#include <QFile>
+#include <QIODevice>
+#include <QDataStream>
 
 using namespace MetaSim;
 
@@ -55,12 +59,54 @@ wifi::~wifi()
 
 void wifi::on_actionLoad_triggered()
 {
-
+    QString filename = QFileDialog::getOpenFileName(this);//getting the file name
+    if(filename != ""){
+        resetConfiguration();
+        QFile file(filename);
+        if (file.open(QIODevice::ReadOnly|QIODevice::Text)){
+            QTextStream in(&file);
+            while(!in.atEnd()) {
+                QString line = in.readLine();
+                QStringList fields = line.split(",");
+                if(fields.size()==5 && fields[0]=="Node"){
+                    _nodes[fields[1].toStdString()] = std::make_tuple(
+                                fields[2].toDouble(),
+                            fields[3].toDouble(),
+                            fields[4].toDouble());
+                }else if(fields.size()==3 && fields[0]=="Connection"){
+                    _connections.emplace_back(std::make_pair(
+                                                  fields[1].toStdString(),
+                                                  fields[2].toStdString()));
+                }
+            }
+            file.close();
+        }
+        populateUI();
+    }
 }
 
 void wifi::on_actionSave_triggered()
 {
-
+    QString FilePath = QFileDialog::getSaveFileName(this);
+    if(FilePath.isEmpty())
+        return;
+    QFile file(FilePath);
+    if (file.open(QIODevice::WriteOnly|QIODevice::Text))
+    {
+         QTextStream out(&file);
+        for (auto n: _nodes)
+            out <<
+              QString("Node,")
+                   .append(n.first.c_str()).append(",")
+                   .append(QString::number(std::get<0>(n.second))).append(",")
+                   .append(QString::number(std::get<1>(n.second))).append(",")
+                   .append(QString::number(std::get<2>(n.second))).append("\n");                      ;
+        for (auto c: _connections)
+            out << QString("Connection,")
+                   .append(c.first.c_str()).append(",")
+                   .append(c.second.c_str()).append("\n");
+        file.close();
+    }
 }
 
 void wifi::resetConfiguration(){
@@ -82,21 +128,32 @@ void wifi::generateConfiguration(int n, int m)
         for (int j=0; j<m; ++j){
             std::string name {"Node_" + to_string(i) + "_" + to_string(j)};
             _nodes[name] = std::make_tuple(i, j, 1.0);
-            new QListWidgetItem(QString(name.c_str()), ui->node_list);
-            emit on_node_created( name, QPointF(i, j), 1.0 );
         }
     }
     for (int i=0; i<n; ++i){ //adding destinations
         std::string from{"Node_" + to_string(i) + "_" + to_string(0)};
         std::string to{"Node_" + to_string(i) + "_" + to_string(m-1)};
         _connections.emplace_back(std::make_pair(from, to));
-        emit on_connection_created(std::make_pair(from, to));
+
     }
     for (int i=0; i<m; ++i){ //adding destinations
         std::string from{"Node_" + to_string(0) + "_" + to_string(i)};
         std::string to{"Node_" + to_string(m-1) + "_" + to_string(i)};
         _connections.emplace_back(std::make_pair(from, to));
-        emit on_connection_created(std::make_pair(from, to));
+    }
+    populateUI();
+}
+
+void wifi::populateUI()
+{
+    for (auto& n : _nodes){
+        new QListWidgetItem(QString(n.first.c_str()), ui->node_list);
+        emit on_node_created( n.first,
+                              QPointF(std::get<0>(n.second), std::get<1>(n.second)),
+                              std::get<2>(n.second));
+    }
+    for (auto& c : _connections){
+        emit on_connection_created(c);
     }
 }
 

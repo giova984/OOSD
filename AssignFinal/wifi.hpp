@@ -62,6 +62,7 @@ private:
 
     void resetConfiguration();
     void generateConfiguration(int n, int m);
+    void populateUI();
     void resetLists();
 
 signals:

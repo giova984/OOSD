@@ -4,7 +4,7 @@
 
 NodeViewer::NodeViewer(QWidget *parent) : QWidget(parent),
     _actual_scale(DEFAULT_SCALE),
-
+    _actual_margin{1},
     _screen_region(0,0,0,0),
     _screen_region_color(25, 180, 25, 100),
     _grid_color(0,0,0,0),
@@ -51,6 +51,8 @@ void NodeViewer::drawScreen(){
 
 #define PIXEL_TO_WIDTH _screen_region.size().width() / _actual_scale
 #define PIXEL_TO_HEIGHT _screen_region.size().height() / _actual_scale
+#define MARGIN_LEFT PIXEL_TO_WIDTH
+#define MARGIN_TOP PIXEL_TO_HEIGHT
 
 void NodeViewer::drawPoints(){
     QPainter painter(this);
@@ -58,8 +60,8 @@ void NodeViewer::drawPoints(){
     painter.setPen(this->_pen);
 
     for (auto& p : _points){
-        auto x =  p.second.first.x() * PIXEL_TO_WIDTH;
-        auto y =  p.second.first.y() * PIXEL_TO_HEIGHT;
+        auto x =  p.second.first.x() * PIXEL_TO_WIDTH + MARGIN_LEFT;
+        auto y =  p.second.first.y() * PIXEL_TO_HEIGHT + MARGIN_TOP;
         auto rx =  p.second.second * PIXEL_TO_WIDTH;
         auto ry =  p.second.second * PIXEL_TO_HEIGHT;
 
@@ -72,8 +74,8 @@ void NodeViewer::drawPoints(){
     }
     // selected nodes are drawn on top of other nodes (Z-ordering)
     if (_destination_selected != ""){
-        auto x =  _points[_destination_selected].first.x() * PIXEL_TO_WIDTH;
-        auto y =  _points[_destination_selected].first.y() * PIXEL_TO_HEIGHT;
+        auto x =  _points[_destination_selected].first.x() * PIXEL_TO_WIDTH + MARGIN_LEFT;
+        auto y =  _points[_destination_selected].first.y() * PIXEL_TO_HEIGHT + MARGIN_TOP;
         auto rx =  _points[_destination_selected].second * PIXEL_TO_WIDTH;
         auto ry =  _points[_destination_selected].second * PIXEL_TO_HEIGHT;
         painter.setBrush(QBrush(_color_destination_point));
@@ -82,8 +84,8 @@ void NodeViewer::drawPoints(){
         painter.drawEllipse(QPointF(x,y), rx, ry);
     }
     if(_point_selected != ""){
-        auto x =  _points[_point_selected].first.x() * PIXEL_TO_WIDTH;
-        auto y =  _points[_point_selected].first.y() * PIXEL_TO_HEIGHT;
+        auto x =  _points[_point_selected].first.x() * PIXEL_TO_WIDTH + MARGIN_LEFT;
+        auto y =  _points[_point_selected].first.y() * PIXEL_TO_HEIGHT + MARGIN_TOP;
         auto rx =  _points[_point_selected].second * PIXEL_TO_WIDTH;
         auto ry =  _points[_point_selected].second * PIXEL_TO_HEIGHT;
         painter.setBrush(QBrush(_color_point_selected));
@@ -120,8 +122,8 @@ void NodeViewer::drawConnections()
     painter.setBrush(QBrush(_color_connection));
     for (auto& i : _connections){
         try{
-            QPointF p1{  _points.at(i.first).first.x() * PIXEL_TO_WIDTH, _points.at(i.first).first.y() * PIXEL_TO_HEIGHT };
-            QPointF p2{  _points.at(i.second).first.x() * PIXEL_TO_WIDTH, _points.at(i.second).first.y() * PIXEL_TO_HEIGHT };
+            QPointF p1{  _points.at(i.first).first.x() * PIXEL_TO_WIDTH + MARGIN_LEFT, _points.at(i.first).first.y() * PIXEL_TO_HEIGHT + MARGIN_TOP };
+            QPointF p2{  _points.at(i.second).first.x() * PIXEL_TO_WIDTH + MARGIN_LEFT, _points.at(i.second).first.y() * PIXEL_TO_HEIGHT + MARGIN_TOP };
             painter.drawLine(p1, p2);
         }catch(std::out_of_range){}
     }
@@ -129,10 +131,10 @@ void NodeViewer::drawConnections()
 
 void NodeViewer::update_size(const QPointF &p)
 {
-    if (p.x() > _actual_scale)
-        _actual_scale = p.x();
-    if (p.y() > _actual_scale)
-        _actual_scale = p.y();
+    if (p.x() + 2*_actual_margin > _actual_scale)
+        _actual_scale = p.x() + 2*_actual_margin;
+    if (p.y() + 2*_actual_margin > _actual_scale)
+        _actual_scale = p.y() + 2*_actual_margin;
 }
 
 void NodeViewer::recalculate_size()

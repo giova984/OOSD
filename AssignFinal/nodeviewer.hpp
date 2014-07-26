@@ -30,13 +30,14 @@ protected:
 private:
 
     double _actual_scale;
+    double _actual_margin;
 
     std::string _point_selected;
     std::string _destination_selected;
     std::map<std::string, std::pair<QPointF, double>> _points;
     std::vector<std::pair<std::string, std::string>> _connections;
 
-    const static int DEFAULT_SCALE = 10;
+    const static int DEFAULT_SCALE = 5;
     const static int DEFAULT_POINT_SIZE = 100;
     const static int DEFAULT_RADIUS_STROKE_SIZE = 2;
 
