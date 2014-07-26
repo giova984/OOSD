@@ -34,6 +34,8 @@ std::string to_string(T value)
 wifi::wifi(QWidget *parent) :
     QMainWindow(parent),
     ui{std::unique_ptr<Ui::wifi>(new Ui::wifi)},
+    _viewer(this),
+    _plotter(this),
     _nodes{},
     _connections{}
 {
@@ -186,7 +188,7 @@ void wifi::on_actionRun_triggered()
     const int MAX_VAR = 1000;
     const int MAX_PACKET_SIZE = 1500;
     const int MAX_CONTENTION_TIME = 10;
-    const int MAX_NUMBER_OF_COLLISION = 100;
+    const int MAX_NUMBER_OF_COLLISION = 100 * _nodes.size();
     const int PACKET_TO_SEND = 100;
 
     const int NUMBER_OF_RUNS = 5;
@@ -231,7 +233,7 @@ void wifi::on_actionRun_triggered()
 
 void wifi::on_actionShow_Results_triggered()
 {
-
+    _plotter.show();
 }
 
 void wifi::resetLists(){

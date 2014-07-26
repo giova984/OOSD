@@ -9,6 +9,7 @@
 #include "link.hpp"
 #include "routing.hpp"
 #include "nodeviewer.hpp"
+#include "plotresults.hpp"
 
 class QTableWidgetItem;
 
@@ -50,6 +51,7 @@ private slots:
 private:
     std::unique_ptr<Ui::wifi> ui;
     NodeViewer _viewer;
+    PlotResults _plotter;
 
 //    WifiLink _link;
 //    WifiRoutingTable _routing_table;
