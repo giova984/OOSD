@@ -53,7 +53,7 @@ void WifiInterface::newRun()
         _received.clear();
         _blocked.clear();
 
-        std::cout << "seed " << _cont_rand_gen->getCurrSeed() << std::endl;
+        //std::cout << "seed " << _cont_rand_gen->getCurrSeed() << std::endl;
         _cont_rand_gen = std::unique_ptr<RandomGen>(new RandomGen(_cont_rand_gen->getCurrSeed()));
 
 }

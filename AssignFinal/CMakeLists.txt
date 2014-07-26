@@ -22,6 +22,7 @@ qt5_wrap_ui(PLOTRESULTS_UI plotresults.ui)
 add_executable(wifi
 ${MAIN_UI}
 ${PLOTRESULTS_UI}
+catch.hpp
 node.cpp
 message.cpp
 link.cpp
@@ -33,6 +34,7 @@ wifi.cpp
 wifistatistics.cpp
 qcustomplot.h qcustomplot.cpp
 plotresults.cpp
+testwifi.cpp
 )
 target_link_libraries(wifi ${METASIM_LIBRARY} Qt5::Widgets Qt5::PrintSupport)
 

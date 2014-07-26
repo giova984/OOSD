@@ -214,7 +214,7 @@ void wifi::on_actionRun_triggered()
         std::string name = n.first;
         nodes[name] = std::unique_ptr<Node>(new Node(name));
         auto seed = seeds_gen.get();
-        std::cout << "seedgen " << seed << std::endl;
+        //std::cout << "seedgen " << seed << std::endl;
         interfaces[name] = std::unique_ptr<WifiInterface>(new WifiInterface(
                                                               std::string("interface").append(name),
                                                               *nodes[name],

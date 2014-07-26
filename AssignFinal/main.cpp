@@ -12,6 +12,9 @@
 #include "wifi.hpp"
 #include "wifistatistics.hpp"
 
+#define CATCH_CONFIG_RUNNER
+#include "catch.hpp"
+
 #define __DEBUG__
 
 using namespace std;
@@ -33,13 +36,15 @@ std::string to_string(T value)
     return os.str() ;
 }
 
+int main_tests(int argc, char** argv);
 int main_ex2();
 int main_simple();
 int main_ui(int argc, char** argv);
 
 int main(int argc, char** argv)
 {
-    return main_ui(argc, argv);
+    return main_tests(argc, argv);
+    //return main_ui(argc, argv);
     //return main_ex2();
     //return main_simple();
 
@@ -212,4 +217,9 @@ int main_ui(int argc, char** argv){
     mainWin.setWindowTitle("Simple Wifi Simulator");
     mainWin.show();
     return app.exec();
+}
+using namespace Catch;
+int main_tests( int argc, char **argv )
+{
+    return Catch::Session().run( argc, argv );
 }

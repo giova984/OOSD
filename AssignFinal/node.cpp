@@ -63,7 +63,7 @@ void Node::setInterval(std::unique_ptr<RandomVar> i)
         _interval = std::move(i);
 }
 
-void Node::addDestNode(Node &n)
+void Node::addDestNode(Node& n)
 {
         _nodes.push_back(&n);
 }
@@ -90,7 +90,9 @@ void Node::onSend(Event *e)
     Message *m = new Message((int)len.get(), this, _nodes[i]);
     //FIXEDMessage *m = new Message(1000, this, _nodes[0]);
     _net_interf->send(m);
-    _send_evt.post(SIMUL.getTime() + (Tick)_interval->get());
+    if (_interval != nullptr)
+        _send_evt.post(SIMUL.getTime() + (Tick)_interval->get());
     //FIXED_send_evt.post(SIMUL.getTime() + (Tick)1000);
 
 }
+
